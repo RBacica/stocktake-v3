@@ -15,6 +15,7 @@
         }
 
         body {
+            overscroll-behavior-y: none;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #1a1a2e;
             color: #e0e0e0;
@@ -142,6 +143,17 @@
             box-shadow: 0 4px 12px rgba(255, 170, 0, 0.3);
         }
 
+        .btn-print {
+            background: linear-gradient(135deg, #3a7bd5, #2d5aa3);
+            color: #fff;
+        }
+
+        .btn-print:hover {
+            background: linear-gradient(135deg, #4a8be5, #3d6ab3);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(58, 123, 213, 0.3);
+        }
+
         .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
@@ -149,24 +161,28 @@
             box-shadow: none;
         }
 
-        .controls {
+        .toolbar {
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            gap: 8px;
             margin-bottom: 16px;
+        }
+
+        .toolbar-row {
+            display: flex;
+            gap: 8px;
             align-items: center;
             flex-wrap: wrap;
         }
 
-        .lookup-bar {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-            align-items: center;
+        .toolbar-row .btn {
+            flex: 0 0 auto;
+            white-space: nowrap;
         }
 
-        .lookup-bar input[type="text"] {
+        .toolbar-filter {
             flex: 1;
-            max-width: 400px;
+            min-width: 180px;
             padding: 8px 14px;
             border-radius: 8px;
             border: 1px solid #0f3460;
@@ -176,25 +192,22 @@
             transition: border-color 0.2s;
         }
 
-        .lookup-bar input[type="text"]:focus {
+        .toolbar-filter:focus {
             outline: none;
             border-color: #00d4ff;
         }
 
-        .lookup-bar .btn-clear-lookup {
-            padding: 8px 16px;
-            border: 1px solid #555;
-            border-radius: 8px;
-            background: none;
-            color: #aaa;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s;
+        .toolbar-row .toolbar-btn-export {
+            flex: 0 0 auto;
         }
 
-        .lookup-bar .btn-clear-lookup:hover {
-            color: #fff;
-            border-color: #fff;
+        .toolbar-stats {
+            gap: 6px;
+        }
+
+        .toolbar-stats .stat {
+            flex: 1;
+            min-width: 0;
         }
 
         .toggle-checkbox {
@@ -254,6 +267,22 @@
 
         .toggle-checkbox.ticket-filter-toggle input[type="checkbox"] {
             accent-color: #cc77ff;
+        }
+
+        .btn-clear-lookup {
+            padding: 8px 14px;
+            border: 1px solid #555;
+            border-radius: 8px;
+            background: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .btn-clear-lookup:hover {
+            color: #fff;
+            border-color: #fff;
         }
 
         .table-wrapper {
@@ -393,13 +422,6 @@
             padding: 12px 20px;
             border-radius: 8px;
             margin-bottom: 16px;
-        }
-
-        .stats-bar {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
         }
 
         .stat {
@@ -631,6 +653,151 @@
             color: #aaa;
             font-size: 0.9rem;
         }
+        /* Print Count Sheet */
+        .count-sheet-table {
+            display: none;
+        }
+
+        @media print {
+            /* Hide everything except the count sheet */
+            body {
+                background: #fff !important;
+                color: #000 !important;
+                padding: 10px !important;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+            }
+
+            .container {
+                max-width: 100% !important;
+            }
+
+            h1 {
+                color: #000 !important;
+                font-size: 1.4rem !important;
+            }
+
+            .subtitle,
+            .search-panel,
+            .toolbar,
+            .table-wrapper,
+            .dialog-overlay,
+            .btn-print {
+                display: none !important;
+            }
+
+            /* Show the count sheet table */
+            .count-sheet-table {
+                display: table !important;
+                width: 100% !important;
+                border-collapse: collapse !important;
+                font-size: 0.75rem !important;
+                page-break-inside: auto;
+            }
+
+            .count-sheet-table thead {
+                display: table-header-group !important;
+            }
+
+            .count-sheet-table thead tr {
+                background: #eee !important;
+            }
+
+            .count-sheet-table th {
+                color: #000 !important;
+                padding: 6px 8px !important;
+                border: 1px solid #999 !important;
+                font-size: 0.7rem !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.5px !important;
+                text-align: left !important;
+            }
+
+            .count-sheet-table td {
+                padding: 5px 8px !important;
+                border: 1px solid #ccc !important;
+                color: #000 !important;
+                font-size: 0.72rem !important;
+                page-break-inside: avoid;
+            }
+
+            .count-sheet-table .upc {
+                font-family: 'Courier New', monospace !important;
+                color: #000 !important;
+                font-weight: 600 !important;
+            }
+
+            .count-sheet-table .description {
+                max-width: 280px !important;
+            }
+
+            .count-sheet-table .stock-on-hand {
+                text-align: center !important;
+                font-weight: 600 !important;
+            }
+
+            .count-sheet-table .count-box {
+                width: 60px !important;
+                height: 24px !important;
+                border: 1px solid #999 !important;
+                background: none !important;
+            }
+
+            .count-sheet-table .count-val {
+                text-align: center !important;
+                font-weight: 700 !important;
+                font-family: 'Courier New', monospace !important;
+            }
+
+            .count-sheet-table .variance-cell {
+                text-align: center !important;
+                font-weight: 700 !important;
+                font-family: 'Courier New', monospace !important;
+            }
+
+            .count-sheet-table .var-negative {
+                color: #c00 !important;
+            }
+
+            .count-sheet-table .var-positive {
+                color: #080 !important;
+            }
+
+            .count-sheet-table .ticket-cell {
+                text-align: center !important;
+                width: 30px !important;
+            }
+
+            .count-sheet-table .ticket-cell input[type="checkbox"] {
+                width: 14px !important;
+                height: 14px !important;
+                accent-color: #333 !important;
+                -webkit-appearance: checkbox !important;
+                appearance: checkbox !important;
+            }
+
+            .count-sheet-table .parent-row td {
+                font-weight: 600 !important;
+            }
+
+            .count-sheet-table .child-row td {
+                font-size: 0.68rem !important;
+                color: #333 !important;
+            }
+
+            .count-sheet-table .child-row td:first-child {
+                padding-left: 20px !important;
+            }
+
+            .count-sheet-table .indent-marker {
+                color: #888 !important;
+                margin-right: 4px !important;
+            }
+
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
+            }
+        }
     </style>
 </head>
 <body>
@@ -656,55 +823,57 @@
             <button class="btn btn-search" onclick="searchItems()">Search</button>
         </div>
 
-        <!-- Controls -->
-        <div class="controls">
-            <div class="toggle-checkbox" id="variance-toggle" onclick="toggleVarianceFilter()">
-                <input type="checkbox" id="show-variance-only">
-                <label for="show-variance-only">Show only items with variance</label>
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <!-- Row 1: Toggles + Refresh + Print -->
+            <div class="toolbar-row">
+                <div class="toggle-checkbox" id="variance-toggle" onclick="toggleVarianceFilter()">
+                    <input type="checkbox" id="show-variance-only">
+                    <label for="show-variance-only">Show Variance</label>
+                </div>
+                <div class="toggle-checkbox ticket-filter-toggle" id="ticket-filter-toggle" onclick="toggleTicketFilter()">
+                    <input type="checkbox" id="show-ticketed-only">
+                    <label for="show-ticketed-only">List Tickets</label>
+                </div>
+                <div class="toggle-checkbox zero-toggle" id="zero-toggle" onclick="toggleZeroCount()">
+                    <input type="checkbox" id="treat-no-count-zero" checked>
+                    <label for="treat-no-count-zero">No Count as Zero</label>
+                </div>
+                <button class="btn btn-refresh" onclick="refreshAllItems()">Refresh All</button>
+                <button class="btn btn-print" onclick="printCountSheet()">Print Count Sheet</button>
             </div>
-            <div class="toggle-checkbox ticket-filter-toggle" id="ticket-filter-toggle" onclick="toggleTicketFilter()">
-                <input type="checkbox" id="show-ticketed-only">
-                <label for="show-ticketed-only">Show only items with tickets</label>
+            <!-- Row 2: Filter + Import + Export -->
+            <div class="toolbar-row">
+                <input type="text" id="lookup-input" placeholder="Filter by description..." oninput="onLookupChange()" class="toolbar-filter">
+                <button class="btn-clear-lookup" onclick="clearLookup()" title="Clear filter">✕</button>
+                <div class="file-input-wrapper">
+                    <button class="btn btn-load">Import Count</button>
+                    <input type="file" id="load-file-input" accept=".txt,.csv">
+                </div>
+                <button class="btn btn-save toolbar-btn-export" onclick="saveResults()">Export</button>
             </div>
-            <div class="toggle-checkbox zero-toggle" id="zero-toggle" onclick="toggleZeroCount()">
-                <input type="checkbox" id="treat-no-count-zero" checked>
-                <label for="treat-no-count-zero">Treat no count as zero</label>
-            </div>
-            <button class="btn btn-save" onclick="saveResults()">Save Results</button>
-            <button class="btn btn-refresh" onclick="refreshAllItems()">Refresh All</button>
-            <div class="file-input-wrapper">
-                <button class="btn btn-load">Load Count File</button>
-                <input type="file" id="load-file-input" accept=".txt,.csv">
-            </div>
-        </div>
-
-        <!-- Lookup Bar -->
-        <div class="lookup-bar" id="lookup-bar" style="display:none">
-            <input type="text" id="lookup-input" placeholder="Filter by description..." oninput="onLookupChange()">
-            <button class="btn-clear-lookup" onclick="clearLookup()" title="Clear filter">✕ Clear</button>
-        </div>
-
-        <!-- Stats Bar -->
-        <div class="stats-bar" id="stats-bar" style="display:none">
-            <div class="stat">
-                <div class="stat-value" id="stat-total">0</div>
-                <div class="stat-label">Total Items</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="stat-counted">0</div>
-                <div class="stat-label">Counted</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="stat-uncounted">0</div>
-                <div class="stat-label">Uncounted</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="stat-variance">0</div>
-                <div class="stat-label">With Variance</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="stat-tickets">0</div>
-                <div class="stat-label">Tickets</div>
+            <!-- Row 3: Tracking Boxes -->
+            <div class="toolbar-row toolbar-stats">
+                <div class="stat">
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="stat-counted">0</div>
+                    <div class="stat-label">Counted</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="stat-uncounted">0</div>
+                    <div class="stat-label">Uncounted</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="stat-variance">0</div>
+                    <div class="stat-label">Variance</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="stat-tickets">0</div>
+                    <div class="stat-label">Tickets</div>
+                </div>
             </div>
         </div>
 
@@ -736,8 +905,16 @@
                     </tr>
                 </tbody>
             </table>
-        </div>
-    </div>
+        </div><!-- end table-wrapper -->
+
+        <!-- Print Count Sheet Table (hidden on screen, shown only when printing) -->
+        <table class="count-sheet-table" id="count-sheet-table">
+            <thead id="count-sheet-head">
+            </thead>
+            <tbody id="count-sheet-body">
+            </tbody>
+        </table>
+    </div><!-- end .container -->
 
     <!-- Loading Dialog -->
     <div class="dialog-overlay" id="loading-dialog">
@@ -920,8 +1097,6 @@
                 }
                 allItems = await resp.json();
                 buildParentChildMap(allItems);
-                // Show/hide lookup bar based on results
-                document.getElementById('lookup-bar').style.display = allItems.length > 0 ? 'flex' : 'none';
                 renderTable();
             } catch (e) {
                 document.getElementById('results-body').innerHTML = `
@@ -1445,12 +1620,6 @@
         //  Stats Bar
         // ─────────────────────────────────────
         function updateStats(total, counted, uncounted, variance, ticketsCount) {
-            const bar = document.getElementById('stats-bar');
-            if (total === 0) {
-                bar.style.display = 'none';
-                return;
-            }
-            bar.style.display = 'flex';
             document.getElementById('stat-total').textContent = total;
             document.getElementById('stat-counted').textContent = counted;
             document.getElementById('stat-uncounted').textContent = uncounted;
@@ -1524,8 +1693,8 @@
             }
 
             const saveBtn = document.querySelector('.btn-save');
-            const originalLabel = saveBtn ? saveBtn.textContent : 'Save Results';
-            if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+            const originalLabel = saveBtn ? saveBtn.textContent : 'Export Count';
+            if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Exporting…'; }
 
             try {
                 const resp = await fetch('/api/save', {
@@ -1610,6 +1779,159 @@
         }
 
         // ─────────────────────────────────────
+        //  Print Count Sheet
+        // ─────────────────────────────────────
+        function printCountSheet() {
+            if (allItems.length === 0) {
+                alert('No items loaded. Please run a search first.');
+                return;
+            }
+
+            const tbody = document.getElementById('count-sheet-body');
+            let html = '';
+            let visibleIdx = 0;
+
+            // First pass: determine which items are visible (matching renderTable filters)
+            // and whether any of them have counts entered
+            let visibleItems = [];
+            let hasAnyCount = false;
+
+            allItems.forEach((item) => {
+                if (childUpcs.has(item.upc)) return;
+
+                const isParent = childrenByParent[item.upc] && childrenByParent[item.upc].length > 0;
+                const variance = isParent ? getParentCombinedVariance(item.upc) : getItemVariance(item.upc);
+                const hasVar = Math.abs(variance) >= 0.05;
+
+                const hideVariance = showVarianceOnly && !hasVar;
+                const hideTicket = showTicketedOnly && !tickets.has(item.upc);
+                const hideLookup = lookupFilter !== '' && !item.description.toLowerCase().includes(lookupFilter);
+                if (hideVariance || hideTicket || hideLookup) return;
+
+                const v = counts[item.upc];
+                if (v != null && v !== '') hasAnyCount = true;
+
+                visibleItems.push({ item, isParent, variance });
+            });
+
+            // Also check children for counts
+            if (!hasAnyCount) {
+                allItems.forEach((item) => {
+                    if (!childUpcs.has(item.upc)) return;
+                    const v = counts[item.upc];
+                    if (v != null && v !== '') hasAnyCount = true;
+                });
+            }
+
+            if (visibleItems.length === 0) {
+                alert('No items to print. Adjust your filters and try again.');
+                return;
+            }
+
+            // Choose layout based on whether counts exist
+            // Generate the appropriate thead
+            const thead = document.getElementById('count-sheet-head');
+            if (hasAnyCount) {
+                thead.innerHTML = `<tr>
+                    <th>#</th><th>UPC</th><th>Description</th>
+                    <th>Stock On Hand</th><th>Count</th><th>Var</th><th>Recount</th>
+                </tr>`;
+            } else {
+                thead.innerHTML = `<tr>
+                    <th>#</th><th>UPC</th><th>Description</th>
+                    <th>Stock On Hand</th><th>Count</th><th>Ticket</th>
+                </tr>`;
+            }
+
+            if (hasAnyCount) {
+                // ── Counted layout: #, UPC, Description, SoH, Count, Var, Recount Box ──
+                visibleItems.forEach(({ item, isParent, variance }) => {
+                    visibleIdx++;
+                    const hasTicket = tickets.has(item.upc);
+                    const soh = item.stock_on_hand.toFixed(2);
+                    const v = counts[item.upc];
+                    const hasCount = v != null && v !== '';
+                    const countVal = hasCount ? (Math.round(parseFloat(v) || 0)).toString() : '';
+                    const varVal = hasCount ? (Math.round(parseFloat(v) || 0) - item.stock_on_hand).toFixed(2) : '';
+                    const varClass = parseFloat(varVal) < 0 ? 'var-negative' : (parseFloat(varVal) > 0 ? 'var-positive' : '');
+
+                    html += `<tr class="parent-row">
+                        <td>${visibleIdx}</td>
+                        <td class="upc">${escapeHtml(item.upc)}</td>
+                        <td class="description">${escapeHtml(item.description)}</td>
+                        <td class="stock-on-hand">${soh}</td>
+                        <td class="count-val">${countVal}</td>
+                        <td class="variance-cell ${varClass}">${varVal}</td>
+                        <td><div class="count-box"></div></td>
+                    </tr>`;
+
+                    if (isParent) {
+                        const children = childrenByParent[item.upc];
+                        children.forEach(child => {
+                            const childHasTicket = tickets.has(child.upc);
+                            const childSoh = child.stock_on_hand.toFixed(2);
+                            const cv = counts[child.upc];
+                            const childHasCount = cv != null && cv !== '';
+                            const childCountVal = childHasCount ? (Math.round(parseFloat(cv) || 0)).toString() : '';
+                            const childVarVal = childHasCount ? (Math.round(parseFloat(cv) || 0) - child.stock_on_hand).toFixed(2) : '';
+                            const childVarClass = parseFloat(childVarVal) < 0 ? 'var-negative' : (parseFloat(childVarVal) > 0 ? 'var-positive' : '');
+
+                            html += `<tr class="child-row">
+                                <td></td>
+                                <td class="upc"><span class="indent-marker">├─</span>${escapeHtml(child.upc)}</td>
+                                <td class="description">${escapeHtml(child.description)}</td>
+                                <td class="stock-on-hand">${childSoh}</td>
+                                <td class="count-val">${childCountVal}</td>
+                                <td class="variance-cell ${childVarClass}">${childVarVal}</td>
+                                <td><div class="count-box"></div></td>
+                            </tr>`;
+                        });
+                    }
+                });
+            } else {
+                // ── Blank layout: #, UPC, Description, SoH, Count, Ticket ──
+                visibleItems.forEach(({ item, isParent }) => {
+                    visibleIdx++;
+                    const hasTicket = tickets.has(item.upc);
+                    const soh = item.stock_on_hand.toFixed(2);
+
+                    html += `<tr class="parent-row">
+                        <td>${visibleIdx}</td>
+                        <td class="upc">${escapeHtml(item.upc)}</td>
+                        <td class="description">${escapeHtml(item.description)}</td>
+                        <td class="stock-on-hand">${soh}</td>
+                        <td><div class="count-box"></div></td>
+                        <td class="ticket-cell"><input type="checkbox" ${hasTicket ? 'checked' : ''}></td>
+                    </tr>`;
+
+                    if (isParent) {
+                        const children = childrenByParent[item.upc];
+                        children.forEach(child => {
+                            const childHasTicket = tickets.has(child.upc);
+                            const childSoh = child.stock_on_hand.toFixed(2);
+
+                            html += `<tr class="child-row">
+                                <td></td>
+                                <td class="upc"><span class="indent-marker">├─</span>${escapeHtml(child.upc)}</td>
+                                <td class="description">${escapeHtml(child.description)}</td>
+                                <td class="stock-on-hand">${childSoh}</td>
+                                <td><div class="count-box"></div></td>
+                                <td class="ticket-cell"><input type="checkbox" ${childHasTicket ? 'checked' : ''}></td>
+                            </tr>`;
+                        });
+                    }
+                });
+            }
+
+            tbody.innerHTML = html;
+
+            // Small delay to ensure DOM is updated before print dialog
+            setTimeout(() => {
+                window.print();
+            }, 100);
+        }
+
+        // ─────────────────────────────────────
         //  Reset
         // ─────────────────────────────────────
         function resetAll() {
@@ -1633,11 +1955,11 @@
                         <p>Select a department and/or supplier, then click Search</p>
                     </div>
                 </td></tr>`;
-            document.getElementById('stats-bar').style.display = 'none';
-            document.getElementById('lookup-bar').style.display = 'none';
             document.getElementById('lookup-input').value = '';
             lookupFilter = '';
             document.getElementById('department-select').value = 'ALL';
+            // Reset tracking boxes
+            updateStats(0, 0, 0, 0, 0);
             // Reset supplier list to full list
             const supSel = document.getElementById('supplier-select');
             supSel.innerHTML = '<option value="ALL">All Suppliers</option>';
