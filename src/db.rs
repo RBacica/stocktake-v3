@@ -458,23 +458,126 @@ impl DbPool {
             dept_clause, sup_clause
         );
         
-        let mut stream = conn.query(&query, &[])
-            .await
-            .map_err(|e| DbError::Query(e.to_string()))?;
-        
         let mut items = Vec::new();
-        while let Some(item) = stream.next().await {
-            let item = item.map_err(|e| DbError::Query(e.to_string()))?;
-            if let QueryItem::Row(row) = item {
-                items.push(StockItem {
-                    upc: cell_to_string(&row, 0),
-                    description: cell_to_string(&row, 1),
-                    department: cell_to_string(&row, 2),
-                    supplier: cell_to_string(&row, 3),
-                    stock_on_hand: cell_to_f64(&row, 4),
-                    parent_upc: cell_to_string(&row, 5),
-                    selling_qty: cell_to_f64(&row, 6),
-                });
+        {
+            let mut stream = conn.query(&query, &[])
+                .await
+                .map_err(|e| DbError::Query(e.to_string()))?;
+            while let Some(item) = stream.next().await {
+                let item = item.map_err(|e| DbError::Query(e.to_string()))?;
+                if let QueryItem::Row(row) = item {
+                    items.push(StockItem {
+                        upc: cell_to_string(&row, 0),
+                        description: cell_to_string(&row, 1),
+                        department: cell_to_string(&row, 2),
+                        supplier: cell_to_string(&row, 3),
+                        stock_on_hand: cell_to_f64(&row, 4),
+                        parent_upc: cell_to_string(&row, 5),
+                        selling_qty: cell_to_f64(&row, 6),
+                    });
+                }
+            }
+        }
+        // stream is now dropped, conn is free to reuse
+
+        // ── Expand results so parent/child relationships stay complete ──
+        // If a returned row is a child (ParentUPC set), fetch its parent.
+        // If a returned row is a parent (ParentUPC empty), fetch all its children.
+        let mut parent_upcs_needed: Vec<String> = Vec::new();
+        let mut child_upcs_needed: Vec<String> = Vec::new();
+        for item in &items {
+            if item.parent_upc.trim().is_empty() {
+                child_upcs_needed.push(item.upc.clone());
+            } else {
+                parent_upcs_needed.push(item.parent_upc.trim().to_string());
+            }
+        }
+        {
+            let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+            let mut deduped: Vec<String> = Vec::new();
+            for upc in parent_upcs_needed {
+                if seen.insert(upc.clone()) { deduped.push(upc); }
+            }
+            parent_upcs_needed = deduped;
+        }
+        {
+            let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+            let mut deduped: Vec<String> = Vec::new();
+            for upc in child_upcs_needed {
+                if seen.insert(upc.clone()) { deduped.push(upc); }
+            }
+            child_upcs_needed = deduped;
+        }
+        if !parent_upcs_needed.is_empty() {
+            let mut in_clause = String::new();
+            for (i, upc) in parent_upcs_needed.iter().enumerate() {
+                if i > 0 { in_clause.push_str(", "); }
+                in_clause.push_str(&format!("'{}'", upc.replace('\'', "''")));
+            }
+            let parent_query = format!(
+                "SELECT i.UPC, i.[Description], i.[Department], i.[Supplier], \
+                (SELECT TOP 1 CAST((m.QtyOnHand + m.Quantity) AS FLOAT) FROM [ItemMovement] m \
+                 WHERE m.UPC = i.UPC ORDER BY m.ID Desc) AS StockOnHand, \
+                ISNULL(i.ParentUPC, '') AS ParentUPC, \
+                ISNULL(i.SellingQty, 0) AS SellingQty \
+                 FROM Items i WHERE i.InActive = '0' AND i.UPC IN ({}) ORDER BY i.[Description]",
+                in_clause
+            );
+            let mut existing: std::collections::HashSet<String> =
+                items.iter().map(|i| i.upc.clone()).collect();
+            let mut pstream = conn.query(&parent_query, &[]).await.map_err(|e| DbError::Query(e.to_string()))?;
+            while let Some(item) = pstream.next().await {
+                let item = item.map_err(|e| DbError::Query(e.to_string()))?;
+                if let QueryItem::Row(row) = item {
+                    let upc = cell_to_string(&row, 0);
+                    if existing.contains(&upc) { continue; }
+                    existing.insert(upc.clone());
+                    items.push(StockItem {
+                        upc,
+                        description: cell_to_string(&row, 1),
+                        department: cell_to_string(&row, 2),
+                        supplier: cell_to_string(&row, 3),
+                        stock_on_hand: cell_to_f64(&row, 4),
+                        parent_upc: cell_to_string(&row, 5),
+                        selling_qty: cell_to_f64(&row, 6),
+                    });
+                }
+            }
+        }
+        if !child_upcs_needed.is_empty() {
+            let mut in_clause = String::new();
+            for (i, upc) in child_upcs_needed.iter().enumerate() {
+                if i > 0 { in_clause.push_str(", "); }
+                in_clause.push_str(&format!("'{}'", upc.replace('\'', "''")));
+            }
+            let child_query = format!(
+                "SELECT i.UPC, i.[Description], i.[Department], i.[Supplier], \
+                (SELECT TOP 1 CAST((m.QtyOnHand + m.Quantity) AS FLOAT) FROM [ItemMovement] m \
+                 WHERE m.UPC = i.UPC ORDER BY m.ID Desc) AS StockOnHand, \
+                ISNULL(i.ParentUPC, '') AS ParentUPC, \
+                ISNULL(i.SellingQty, 0) AS SellingQty \
+                 FROM Items i WHERE i.InActive = '0' AND i.ParentUPC IN ({}) ORDER BY i.[Description]",
+                in_clause
+            );
+            let mut existing: std::collections::HashSet<String> =
+                items.iter().map(|i| i.upc.clone()).collect();
+            let mut cstream = conn.query(&child_query, &[]).await.map_err(|e| DbError::Query(e.to_string()))?;
+            while let Some(item) = cstream.next().await {
+                let item = item.map_err(|e| DbError::Query(e.to_string()))?;
+                if let QueryItem::Row(row) = item {
+                    let upc = cell_to_string(&row, 0);
+                    if existing.contains(&upc) { continue; }
+                    existing.insert(upc.clone());
+                    items.push(StockItem {
+                        upc,
+                        description: cell_to_string(&row, 1),
+                        department: cell_to_string(&row, 2),
+                        supplier: cell_to_string(&row, 3),
+                        stock_on_hand: cell_to_f64(&row, 4),
+                        parent_upc: cell_to_string(&row, 5),
+                        selling_qty: cell_to_f64(&row, 6),
+                    });
+                }
             }
         }
         Ok(items)
