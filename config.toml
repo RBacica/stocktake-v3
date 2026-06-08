@@ -1,0 +1,27 @@
+# ─────────────────────────────────────────────
+#  Stocktake App — Configuration Template
+# ─────────────────────────────────────────────
+# Copy this file to config.toml and fill in your values.
+#
+# Connection string supports two formats:
+#
+#  1) Simple key=value:
+#     server=192.168.1.100,1433;database=YourDB;uid=myuser;pwd=mypass;encrypt=false
+#
+#  2) ADO.NET / ODBC style:
+#     Driver={ODBC Driver 17 for SQL Server};Server=192.168.1.100,1433;Database=YourDB;Uid=myuser;Pwd=mypass;Encrypt=no
+#
+# Encrypt options: "true", "false", "off", "no" (off/no = no TLS)
+# Trust cert: "true" | "false" (skip certificate validation)
+
+[server]
+host = "0.0.0.0"
+port = 8080
+
+# Where saved stock takes are written (relative to the .exe, or an
+# absolute path like "C:\\StockTakes"). Created automatically if missing.
+# Each save produces:  stocktake-YYYY-MM-DD-HH-MM-SS.txt  (CSV format)
+output_dir = "stocktake_output"
+
+[database]
+connection_string = "server=YOUR_SERVER,1433;database=YOUR_DB;uid=YOUR_USER;pwd=YOUR_PASSWORD;encrypt=false;trust_cert=true"

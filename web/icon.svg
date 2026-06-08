@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb"/>
+      <stop offset="100%" style="stop-color:#1d4ed8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect x="8" y="8" width="240" height="240" rx="48" ry="48" fill="url(#bg)"/>
+
+  <!-- Shadow for the clipboard body -->
+  <rect x="62" y="48" width="132" height="160" rx="12" ry="12" fill="#1e3a8a" opacity="0.25" transform="translate(3,3)"/>
+
+  <!-- Clipboard body (white card) -->
+  <rect x="62" y="48" width="132" height="160" rx="12" ry="12" fill="#ffffff" stroke="#e5e7eb" stroke-width="2"/>
+
+  <!-- Clipboard top bar -->
+  <rect x="98" y="18" width="60" height="40" rx="8" ry="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="2"/>
+  <circle cx="128" cy="30" r="12" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
+
+  <!-- Checklist lines (3 rows) -->
+  <line x1="80" y1="82" x2="140" y2="82" stroke="#d1d5db" stroke-width="3" stroke-linecap="round"/>
+  <line x1="80" y1="102" x2="155" y2="102" stroke="#d1d5db" stroke-width="3" stroke-linecap="round"/>
+  <line x1="80" y1="122" x2="130" y2="122" stroke="#d1d5db" stroke-width="3" stroke-linecap="round"/>
+  <line x1="80" y1="142" x2="120" y2="142" stroke="#d1d5db" stroke-width="3" stroke-linecap="round"/>
+  <line x1="80" y1="162" x2="148" y2="162" stroke="#d1d5db" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Checkmark on first item -->
+  <rect x="148" y="70" width="22" height="22" rx="4" ry="4" fill="#22c55e"/>
+  <polyline points="153,80 157,84 165,74" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Blue pen/stylus -->
+  <g transform="translate(160, 150) rotate(135)">
+    <rect x="-3" y="-25" width="6" height="50" rx="2" fill="#3b82f6"/>
+    <polygon points="-3,25 3,25 0,35" fill="#3b82f6"/>
+    <rect x="-3" y="-30" width="6" height="8" rx="1" fill="#1e3a8a"/>
+  </g>
+</svg>

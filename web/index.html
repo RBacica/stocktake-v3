@@ -20,7 +20,6 @@
             color: #e0e0e0;
             min-height: 100vh;
             padding: 20px;
-            overscroll-behavior-y: none;
         }
 
         .container {
@@ -119,7 +118,7 @@
         .btn-save:hover {
             background: linear-gradient(135deg, #00dd99, #00bb77);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(204, 136, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(204, 136, 0.3);
         }
 
         .btn-reset {
@@ -143,17 +142,6 @@
             box-shadow: 0 4px 12px rgba(255, 170, 0, 0.3);
         }
 
-        .btn-print {
-            background: linear-gradient(135deg, #3a7bd5, #2d5aa3);
-            color: #fff;
-        }
-
-        .btn-print:hover {
-            background: linear-gradient(135deg, #4a8be5, #3d6ab3);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(58, 123, 213, 0.3);
-        }
-
         .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
@@ -161,28 +149,24 @@
             box-shadow: none;
         }
 
-        .toolbar {
+        .controls {
             display: flex;
-            flex-direction: column;
-            gap: 8px;
+            gap: 10px;
             margin-bottom: 16px;
-        }
-
-        .toolbar-row {
-            display: flex;
-            gap: 8px;
             align-items: center;
             flex-wrap: wrap;
         }
 
-        .toolbar-row .btn {
-            flex: 0 0 auto;
-            white-space: nowrap;
+        .lookup-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            align-items: center;
         }
 
-        .toolbar-filter {
+        .lookup-bar input[type="text"] {
             flex: 1;
-            min-width: 180px;
+            max-width: 400px;
             padding: 8px 14px;
             border-radius: 8px;
             border: 1px solid #0f3460;
@@ -192,22 +176,25 @@
             transition: border-color 0.2s;
         }
 
-        .toolbar-filter:focus {
+        .lookup-bar input[type="text"]:focus {
             outline: none;
             border-color: #00d4ff;
         }
 
-        .toolbar-row .toolbar-btn-export {
-            flex: 0 0 auto;
+        .lookup-bar .btn-clear-lookup {
+            padding: 8px 16px;
+            border: 1px solid #555;
+            border-radius: 8px;
+            background: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
         }
 
-        .toolbar-stats {
-            gap: 6px;
-        }
-
-        .toolbar-stats .stat {
-            flex: 1;
-            min-width: 0;
+        .lookup-bar .btn-clear-lookup:hover {
+            color: #fff;
+            border-color: #fff;
         }
 
         .toggle-checkbox {
@@ -267,39 +254,6 @@
 
         .toggle-checkbox.ticket-filter-toggle input[type="checkbox"] {
             accent-color: #cc77ff;
-        }
-
-        .toggle-checkbox.uncounted-toggle {
-            border-color: #ff9f43;
-        }
-
-        .toggle-checkbox.uncounted-toggle:hover {
-            border-color: #ffb36b;
-        }
-
-        .toggle-checkbox.uncounted-toggle.active {
-            background: #2e2215;
-            border-color: #ff9f43;
-        }
-
-        .toggle-checkbox.uncounted-toggle input[type="checkbox"] {
-            accent-color: #ff9f43;
-        }
-
-        .btn-clear-lookup {
-            padding: 8px 14px;
-            border: 1px solid #555;
-            border-radius: 8px;
-            background: none;
-            color: #aaa;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-        }
-
-        .btn-clear-lookup:hover {
-            color: #fff;
-            border-color: #fff;
         }
 
         .table-wrapper {
@@ -439,6 +393,13 @@
             padding: 12px 20px;
             border-radius: 8px;
             margin-bottom: 16px;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
         }
 
         .stat {
@@ -666,259 +627,9 @@
             margin-bottom: 12px;
         }
 
-        /* Prevent count inputs from triggering any ancestor form submit.
-           This stops page-reload/reset behaviour on Enter in count fields. */
-        .count-input,
-        .ticket-qty-input,
-        .toolbar-filter,
-        .lookup-input {
-            /* no submit-on-enter from toolbar forms */;
-        }
-        /* Print Count Sheet */
-        .count-sheet-table {
-            display: none;
-        }
-
-        /* Mobile / Tablet optimizations */
-        @media (max-width: 1024px) {
-            .search-panel {
-                gap: 12px;
-            }
-            .form-group {
-                min-width: 140px;
-            }
-            .toolbar-row {
-                gap: 6px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 12px;
-            }
-            h1 {
-                font-size: 1.4rem;
-            }
-            .search-panel {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .form-group {
-                width: 100%;
-                min-width: unset;
-            }
-            .toolbar-row {
-                flex-wrap: wrap;
-                justify-content: flex-start;
-            }
-            .btn {
-                width: 100%;
-            }
-            table,
-            thead,
-            tbody,
-            th,
-            td,
-            tr {
-                display: block;
-            }
-            thead {
-                display: none;
-            }
-            tbody tr {
-                margin: 0 0 12px;
-                border: 1px solid #0f3460;
-                border-radius: 8px;
-                background: #111827;
-                padding: 8px 10px;
-            }
-            tbody tr.parent-row {
-                background: #111827;
-            }
-            tbody tr.child-row {
-                background: #0f1322;
-            }
-            tbody tr.has-variance {
-                background: rgba(255, 107, 107, 0.08);
-            }
-            td {
-                border: none;
-                padding: 6px 4px;
-                position: relative;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                gap: 8px;
-            }
-            td::before {
-                content: attr(data-mobile-label);
-                font-weight: 600;
-                color: #9ca3af;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                font-size: 0.72rem;
-                flex-shrink: 0;
-            }
-            td:empty,
-            td:first-child {
-                display: none;
-            }
-            .upc,
-            .description {
-                max-width: unset;
-            }
-            .count-input {
-                width: 100%;
-                text-align: right;
-            }
-            .action-group {
-                flex-wrap: wrap;
-                gap: 6px;
-            }
-            .ticket-qty-input {
-                width: 100%;
-            }
-        }
-
-        @media print {
-            /* Hide everything except the count sheet */
-            body {
-                background: #fff !important;
-                color: #000 !important;
-                padding: 10px !important;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-            }
-
-            .container {
-                max-width: 100% !important;
-            }
-
-            h1 {
-                color: #000 !important;
-                font-size: 1.4rem !important;
-            }
-
-            .subtitle,
-            .search-panel,
-            .toolbar,
-            .table-wrapper,
-            .dialog-overlay,
-            .btn-print {
-                display: none !important;
-            }
-
-            /* Show the count sheet table */
-            .count-sheet-table {
-                display: table !important;
-                width: 100% !important;
-                border-collapse: collapse !important;
-                font-size: 0.75rem !important;
-                page-break-inside: auto;
-            }
-
-            .count-sheet-table thead {
-                display: table-header-group !important;
-            }
-
-            .count-sheet-table thead tr {
-                background: #eee !important;
-            }
-
-            .count-sheet-table th {
-                color: #000 !important;
-                padding: 6px 8px !important;
-                border: 1px solid #999 !important;
-                font-size: 0.7rem !important;
-                text-transform: uppercase !important;
-                letter-spacing: 0.5px !important;
-                text-align: left !important;
-            }
-
-            .count-sheet-table td {
-                padding: 5px 8px !important;
-                border: 1px solid #ccc !important;
-                color: #000 !important;
-                font-size: 0.72rem !important;
-                page-break-inside: avoid;
-            }
-
-            .count-sheet-table .upc {
-                font-family: 'Courier New', monospace !important;
-                color: #000 !important;
-                font-weight: 600 !important;
-            }
-
-            .count-sheet-table .description {
-                max-width: 280px !important;
-            }
-
-            .count-sheet-table .stock-on-hand {
-                text-align: center !important;
-                font-weight: 600 !important;
-            }
-
-            .count-sheet-table .count-box {
-                width: 60px !important;
-                height: 24px !important;
-                border: 1px solid #999 !important;
-                background: none !important;
-            }
-
-            .count-sheet-table .count-val {
-                text-align: center !important;
-                font-weight: 700 !important;
-                font-family: 'Courier New', monospace !important;
-            }
-
-            .count-sheet-table .variance-cell {
-                text-align: center !important;
-                font-weight: 700 !important;
-                font-family: 'Courier New', monospace !important;
-            }
-
-            .count-sheet-table .var-negative {
-                color: #c00 !important;
-            }
-
-            .count-sheet-table .var-positive {
-                color: #080 !important;
-            }
-
-            .count-sheet-table .ticket-cell {
-                text-align: center !important;
-                width: 30px !important;
-            }
-
-            .count-sheet-table .ticket-cell input[type="checkbox"] {
-                width: 14px !important;
-                height: 14px !important;
-                accent-color: #333 !important;
-                -webkit-appearance: checkbox !important;
-                appearance: checkbox !important;
-            }
-
-            .count-sheet-table .parent-row td {
-                font-weight: 600 !important;
-            }
-
-            .count-sheet-table .child-row td {
-                font-size: 0.68rem !important;
-                color: #333 !important;
-            }
-
-            .count-sheet-table .child-row td:first-child {
-                padding-left: 20px !important;
-            }
-
-            .count-sheet-table .indent-marker {
-                color: #888 !important;
-                margin-right: 4px !important;
-            }
-
-            @page {
-                size: A4 portrait;
-                margin: 10mm;
-            }
+        .dialog-box p {
+            color: #aaa;
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -941,65 +652,59 @@
                     <option value="ALL">All Suppliers</option>
                 </select>
             </div>
-            <button type="button" class="btn btn-reset" onclick="resetAll()">Reset</button>
-            <button type="button" class="btn btn-search" onclick="searchItems()">Search</button>
+            <button class="btn btn-reset" onclick="resetAll()">Reset</button>
+            <button class="btn btn-search" onclick="searchItems()">Search</button>
         </div>
 
-        <!-- Toolbar -->
-        <div class="toolbar">
-            <!-- Row 1: Toggles + Refresh + Print -->
-            <div class="toolbar-row">
-                <div class="toggle-checkbox" id="variance-toggle" onclick="toggleVarianceFilter()">
-                    <input type="checkbox" id="show-variance-only">
-                    <label for="show-variance-only">Show Variance</label>
-                </div>
-                <div class="toggle-checkbox ticket-filter-toggle" id="ticket-filter-toggle" onclick="toggleTicketFilter()">
-                    <input type="checkbox" id="show-ticketed-only">
-                    <label for="show-ticketed-only">List Tickets</label>
-                </div>
-                <div class="toggle-checkbox zero-toggle" id="zero-toggle" onclick="toggleZeroCount()">
-                    <input type="checkbox" id="treat-no-count-zero" checked>
-                    <label for="treat-no-count-zero">No Count as Zero</label>
-                </div>
-                <div class="toggle-checkbox uncounted-toggle" id="uncounted-toggle" onclick="toggleUncountedFilter()">
-                    <input type="checkbox" id="show-uncounted-only">
-                    <label for="show-uncounted-only">Uncounted</label>
-                </div>
-                <button type="button" class="btn btn-refresh" onclick="refreshAllItems()">Refresh All</button>
-                <button type="button" class="btn btn-print" onclick="printCountSheet()">Print Count Sheet</button>
+        <!-- Controls -->
+        <div class="controls">
+            <div class="toggle-checkbox" id="variance-toggle" onclick="toggleVarianceFilter()">
+                <input type="checkbox" id="show-variance-only">
+                <label for="show-variance-only">Show only items with variance</label>
             </div>
-            <!-- Row 2: Filter + Import + Export -->
-            <div class="toolbar-row">
-                <input type="text" id="lookup-input" placeholder="Filter by description..." oninput="onLookupChange()" class="toolbar-filter">
-                <button type="button" class="btn-clear-lookup" onclick="clearLookup()" title="Clear filter">✕</button>
-                <div class="file-input-wrapper">
-                    <button type="button" class="btn btn-load">Import Count</button>
-                    <input type="file" id="load-file-input" accept=".txt,.csv">
-                </div>
-                <button type="button" class="btn btn-save toolbar-btn-export" onclick="saveResults()">Export</button>
+            <div class="toggle-checkbox ticket-filter-toggle" id="ticket-filter-toggle" onclick="toggleTicketFilter()">
+                <input type="checkbox" id="show-ticketed-only">
+                <label for="show-ticketed-only">Show only items with tickets</label>
             </div>
-            <!-- Row 3: Tracking Boxes -->
-            <div class="toolbar-row toolbar-stats">
-                <div class="stat">
-                    <div class="stat-value" id="stat-total">0</div>
-                    <div class="stat-label">Total</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value" id="stat-counted">0</div>
-                    <div class="stat-label">Counted</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value" id="stat-uncounted">0</div>
-                    <div class="stat-label">Uncounted</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value" id="stat-variance">0</div>
-                    <div class="stat-label">Variance</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value" id="stat-tickets">0</div>
-                    <div class="stat-label">Tickets</div>
-                </div>
+            <div class="toggle-checkbox zero-toggle" id="zero-toggle" onclick="toggleZeroCount()">
+                <input type="checkbox" id="treat-no-count-zero" checked>
+                <label for="treat-no-count-zero">Treat no count as zero</label>
+            </div>
+            <button class="btn btn-save" onclick="saveResults()">Save Results</button>
+            <button class="btn btn-refresh" onclick="refreshAllItems()">Refresh All</button>
+            <div class="file-input-wrapper">
+                <button class="btn btn-load">Load Count File</button>
+                <input type="file" id="load-file-input" accept=".txt,.csv">
+            </div>
+        </div>
+
+        <!-- Lookup Bar -->
+        <div class="lookup-bar" id="lookup-bar" style="display:none">
+            <input type="text" id="lookup-input" placeholder="Filter by description..." oninput="onLookupChange()">
+            <button class="btn-clear-lookup" onclick="clearLookup()" title="Clear filter">✕ Clear</button>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar" id="stats-bar" style="display:none">
+            <div class="stat">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">Total Items</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="stat-counted">0</div>
+                <div class="stat-label">Counted</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="stat-uncounted">0</div>
+                <div class="stat-label">Uncounted</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="stat-variance">0</div>
+                <div class="stat-label">With Variance</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="stat-tickets">0</div>
+                <div class="stat-label">Tickets</div>
             </div>
         </div>
 
@@ -1011,13 +716,13 @@
             <table>
                 <thead>
                     <tr>
-                        <th data-mobile-label="#">#</th>
-                        <th data-mobile-label="UPC">UPC</th>
-                        <th data-mobile-label="Description">Description</th>
-                        <th data-mobile-label="Stock On Hand">Stock On Hand</th>
-                        <th data-mobile-label="Count">Count</th>
-                        <th data-mobile-label="Variance">Variance</th>
-                        <th data-mobile-label="Actions">Actions</th>
+                        <th>#</th>
+                        <th>UPC</th>
+                        <th>Description</th>
+                        <th>Stock On Hand</th>
+                        <th>Count</th>
+                        <th>Variance</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="results-body">
@@ -1031,16 +736,8 @@
                     </tr>
                 </tbody>
             </table>
-        </div><!-- end table-wrapper -->
-
-        <!-- Print Count Sheet Table (hidden on screen, shown only when printing) -->
-        <table class="count-sheet-table" id="count-sheet-table">
-            <thead id="count-sheet-head">
-            </thead>
-            <tbody id="count-sheet-body">
-            </tbody>
-        </table>
-    </div><!-- end .container -->
+        </div>
+    </div>
 
     <!-- Loading Dialog -->
     <div class="dialog-overlay" id="loading-dialog">
@@ -1056,7 +753,6 @@
         let allItems = [];
         let showVarianceOnly = false;
         let showTicketedOnly = false;
-        let showUncountedOnly = false;
         let treatNoCountAsZero = true;
         // counts[upc] = string entered by the user. Lives in JS state so it
         // survives full table re-renders (variance filter, refresh, clear).
@@ -1101,35 +797,6 @@
                     handleFileLoad(this);
                 });
             }
-            // Enter key in number/text inputs inside the table/toolbar should
-            // never trigger a page reload or form submit. Count inputs advance
-            // to the next field; all other inputs just keep the default behavior
-            // without submitting.
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    const active = document.activeElement;
-                    if (!active) return;
-                    const isCountInput = active.classList.contains('count-input');
-                    const isInToolbar = !!active.closest('.toolbar');
-                    const isInTable = !!active.closest('table');
-
-                    if (isCountInput && isInTable) {
-                        e.preventDefault();
-                        const allCountInputs = Array.from(document.querySelectorAll('.count-input'));
-                        const idx = allCountInputs.indexOf(active);
-                        if (idx >= 0 && idx < allCountInputs.length - 1) {
-                            const next = allCountInputs[idx + 1];
-                            next.focus();
-                            next.select();
-                        }
-                        return;
-                    }
-
-                    if (isInToolbar || isInTable) {
-                        e.preventDefault();
-                    }
-                }
-            });
         });
 
         // ─────────────────────────────────────
@@ -1236,10 +903,6 @@
             document.getElementById('show-ticketed-only').checked = false;
             document.getElementById('ticket-filter-toggle').classList.remove('active');
 
-            showUncountedOnly = false;
-            document.getElementById('show-uncounted-only').checked = false;
-            document.getElementById('uncounted-toggle').classList.remove('active');
-
             // Show loading
             document.getElementById('results-body').innerHTML = `
                 <tr><td colspan="7">
@@ -1257,6 +920,8 @@
                 }
                 allItems = await resp.json();
                 buildParentChildMap(allItems);
+                // Show/hide lookup bar based on results
+                document.getElementById('lookup-bar').style.display = allItems.length > 0 ? 'flex' : 'none';
                 renderTable();
             } catch (e) {
                 document.getElementById('results-body').innerHTML = `
@@ -1311,22 +976,25 @@
                 if (childUpcs.has(item.upc)) return;
 
                 const isParent = childrenByParent[item.upc] && childrenByParent[item.upc].length > 0;
-                const hasChildCounts = isParent ? (childrenByParent[item.upc] || []).some(child => counts[child.upc] != null && counts[child.upc] !== '') : false;
-                const hasParentCount = counts[item.upc] != null && counts[item.upc] !== '';
-                const isUncounted = !hasParentCount && !hasChildCounts;
+                // For parent items (those with children), show combined variance
+                // For regular items, show normal variance
                 const variance = isParent ? getParentCombinedVariance(item.upc) : getItemVariance(item.upc);
                 const countStr = counts[item.upc] != null ? counts[item.upc] : '';
+                // hasVar: ignore anything within ±0.05 — fractional noise from SellingQty
+                // rounding (e.g. 0.33 vs 0.34) should not trigger a highlight
                 const hasVar = Math.abs(variance) >= 0.05;
+                // Display: 2dp, but when fractional part >= 0.95, round up to whole
+                // e.g. 0.66→"0.66", 0.99→"1", 1.34→"1.34", 2.97→"3"
                 const displayVal = (Math.abs(variance) % 1 >= 0.95) ? Math.round(variance) : parseFloat(variance.toFixed(2));
                 const signedVar = displayVal > 0 ? `+${displayVal}` : displayVal.toString();
                 const varClass = displayVal > 0 ? 'positive' : displayVal < 0 ? 'negative' : 'zero';
                 const highlightClass = (countStr !== '' && hasVar) ? ' highlight' : '';
 
+                // Determine if row should be hidden by filters
                 const hideVariance = showVarianceOnly && !hasVar;
                 const hideTicket = showTicketedOnly && !tickets.has(item.upc);
-                const hideUncounted = showUncountedOnly && !isUncounted;
                 const hideLookup = lookupFilter !== '' && !item.description.toLowerCase().includes(lookupFilter);
-                if (hideVariance || hideTicket || hideUncounted || hideLookup) return;
+                if (hideVariance || hideTicket || hideLookup) return;
 
                 visibleIdx++;
 
@@ -1340,15 +1008,15 @@
                 const combinedNote = isParent ? '<span class="combined-variance-note">(combined)</span>' : '';
 
                 html += `<tr class="parent-row">
-                    <td data-mobile-label="#">${visibleIdx}</td>
-                    <td class="upc" data-mobile-label="UPC">${escapeHtml(item.upc)}</td>
-                    <td class="description" data-mobile-label="Description">${escapeHtml(item.description)}${ticketDot}</td>
-                    <td class="stock-on-hand" id="soh-${item.upc}" data-mobile-label="Stock On Hand">${item.stock_on_hand.toFixed(2)}</td>
-                    <td data-mobile-label="Count"><input type="number" class="count-input${highlightClass}" id="count-${item.upc}"
+                    <td>${visibleIdx}</td>
+                    <td class="upc">${escapeHtml(item.upc)}</td>
+                    <td class="description">${escapeHtml(item.description)}${ticketDot}</td>
+                    <td class="stock-on-hand" id="soh-${item.upc}">${item.stock_on_hand.toFixed(2)}</td>
+                    <td><input type="number" class="count-input${highlightClass}" id="count-${item.upc}"
                         value="${escapeHtml(countStr)}" placeholder="--" min="0"
-                        oninput="onCountChange('${escapeJs(item.upc)}')" inputmode="numeric"></td>
-                    <td class="variance ${varClass}" id="var-${item.upc}" data-mobile-label="Variance">${signedVar}${combinedNote}</td>
-                    <td data-mobile-label="Actions">
+                        oninput="onCountChange('${escapeJs(item.upc)}')"></td>
+                    <td class="variance ${varClass}" id="var-${item.upc}">${signedVar}${combinedNote}</td>
+                    <td>
                         <div class="action-group">
                             <button class="action-btn refresh-btn" onclick="refreshOneItem('${escapeJs(item.upc)}')">Refresh</button>
                             <button class="action-btn clear-btn" onclick="clearItem('${escapeJs(item.upc)}')">Clear</button>
@@ -1379,15 +1047,15 @@
                             : '';
 
                         html += `<tr class="child-row">
-                            <td data-mobile-label="#">&nbsp;</td>
-                            <td class="upc child-indent" data-mobile-label="UPC">${escapeHtml(child.upc)}</td>
-                            <td class="description" data-mobile-label="Description">${escapeHtml(child.description)}${childTicketDot}</td>
-                            <td class="stock-on-hand" id="soh-${child.upc}" data-mobile-label="Stock On Hand">${child.stock_on_hand.toFixed(2)}</td>
-                            <td data-mobile-label="Count"><input type="number" class="count-input${childHighlightClass}" id="count-${child.upc}"
+                            <td></td>
+                            <td class="upc child-indent">${escapeHtml(child.upc)}</td>
+                            <td class="description">${escapeHtml(child.description)}${childTicketDot}</td>
+                            <td class="stock-on-hand" id="soh-${child.upc}">${child.stock_on_hand.toFixed(2)}</td>
+                            <td><input type="number" class="count-input${childHighlightClass}" id="count-${child.upc}"
                                 value="${escapeHtml(childCountStr)}" placeholder="--" min="0"
-                                oninput="onCountChange('${escapeJs(child.upc)}')" inputmode="numeric"></td>
-                            <td data-mobile-label="Variance">&nbsp;</td>
-                            <td data-mobile-label="Actions">
+                                oninput="onCountChange('${escapeJs(child.upc)}')"></td>
+                            <td></td>
+                            <td>
                                 <div class="action-group">
                                     <button class="action-btn clear-btn" onclick="clearItem('${escapeJs(child.upc)}')">Clear</button>
                                     <button class="${childTicketBtnClass}" onclick="toggleTicket('${escapeJs(child.upc)}')">Ticket</button>
@@ -1401,14 +1069,9 @@
 
             if (html === '') {
                 // All rows filtered out
-                let msg = 'No items match the current filter.';
-                if (showTicketedOnly && !showVarianceOnly && !showUncountedOnly) {
-                    msg = 'No items with tickets match the current filter.';
-                } else if (!showTicketedOnly && showVarianceOnly && !showUncountedOnly) {
-                    msg = 'No items with variance match the current filter.';
-                } else if (!showTicketedOnly && !showVarianceOnly && showUncountedOnly) {
-                    msg = 'No uncounted items match the current filter.';
-                }
+                const msg = showTicketedOnly
+                    ? 'No items with tickets match the current filter.'
+                    : 'No items with variance match the current filter.';
                 tbody.innerHTML = `
                     <tr><td colspan="7">
                         <div class="empty-state">
@@ -1763,24 +1426,6 @@
         });
 
         // ─────────────────────────────────────
-        //  Show-Uncounted-Only Filter Toggle
-        // ─────────────────────────────────────
-        function toggleUncountedFilter() {
-            showUncountedOnly = !showUncountedOnly;
-            const cb = document.getElementById('show-uncounted-only');
-            const toggle = document.getElementById('uncounted-toggle');
-            cb.checked = showUncountedOnly;
-            toggle.classList.toggle('active', showUncountedOnly);
-            renderTable();
-        }
-
-        document.getElementById('show-uncounted-only').addEventListener('change', function() {
-            showUncountedOnly = this.checked;
-            document.getElementById('uncounted-toggle').classList.toggle('active', this.checked);
-            renderTable();
-        });
-
-        // ─────────────────────────────────────
         //  Treat-No-Count-As-Zero Toggle
         // ─────────────────────────────────────
         function toggleZeroCount() {
@@ -1800,6 +1445,12 @@
         //  Stats Bar
         // ─────────────────────────────────────
         function updateStats(total, counted, uncounted, variance, ticketsCount) {
+            const bar = document.getElementById('stats-bar');
+            if (total === 0) {
+                bar.style.display = 'none';
+                return;
+            }
+            bar.style.display = 'flex';
             document.getElementById('stat-total').textContent = total;
             document.getElementById('stat-counted').textContent = counted;
             document.getElementById('stat-uncounted').textContent = uncounted;
@@ -1873,8 +1524,8 @@
             }
 
             const saveBtn = document.querySelector('.btn-save');
-            const originalLabel = saveBtn ? saveBtn.textContent : 'Export Count';
-            if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Exporting…'; }
+            const originalLabel = saveBtn ? saveBtn.textContent : 'Save Results';
+            if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
 
             try {
                 const resp = await fetch('/api/save', {
@@ -1959,159 +1610,6 @@
         }
 
         // ─────────────────────────────────────
-        //  Print Count Sheet
-        // ─────────────────────────────────────
-        function printCountSheet() {
-            if (allItems.length === 0) {
-                alert('No items loaded. Please run a search first.');
-                return;
-            }
-
-            const tbody = document.getElementById('count-sheet-body');
-            let html = '';
-            let visibleIdx = 0;
-
-            // First pass: determine which items are visible (matching renderTable filters)
-            // and whether any of them have counts entered
-            let visibleItems = [];
-            let hasAnyCount = false;
-
-            allItems.forEach((item) => {
-                if (childUpcs.has(item.upc)) return;
-
-                const isParent = childrenByParent[item.upc] && childrenByParent[item.upc].length > 0;
-                const variance = isParent ? getParentCombinedVariance(item.upc) : getItemVariance(item.upc);
-                const hasVar = Math.abs(variance) >= 0.05;
-
-                const hideVariance = showVarianceOnly && !hasVar;
-                const hideTicket = showTicketedOnly && !tickets.has(item.upc);
-                const hideLookup = lookupFilter !== '' && !item.description.toLowerCase().includes(lookupFilter);
-                if (hideVariance || hideTicket || hideLookup) return;
-
-                const v = counts[item.upc];
-                if (v != null && v !== '') hasAnyCount = true;
-
-                visibleItems.push({ item, isParent, variance });
-            });
-
-            // Also check children for counts
-            if (!hasAnyCount) {
-                allItems.forEach((item) => {
-                    if (!childUpcs.has(item.upc)) return;
-                    const v = counts[item.upc];
-                    if (v != null && v !== '') hasAnyCount = true;
-                });
-            }
-
-            if (visibleItems.length === 0) {
-                alert('No items to print. Adjust your filters and try again.');
-                return;
-            }
-
-            // Choose layout based on whether counts exist
-            // Generate the appropriate thead
-            const thead = document.getElementById('count-sheet-head');
-            if (hasAnyCount) {
-                thead.innerHTML = `<tr>
-                    <th>#</th><th>UPC</th><th>Description</th>
-                    <th>Stock On Hand</th><th>Count</th><th>Var</th><th>Recount</th>
-                </tr>`;
-            } else {
-                thead.innerHTML = `<tr>
-                    <th>#</th><th>UPC</th><th>Description</th>
-                    <th>Stock On Hand</th><th>Count</th><th>Ticket</th>
-                </tr>`;
-            }
-
-            if (hasAnyCount) {
-                // ── Counted layout: #, UPC, Description, SoH, Count, Var, Recount Box ──
-                visibleItems.forEach(({ item, isParent, variance }) => {
-                    visibleIdx++;
-                    const hasTicket = tickets.has(item.upc);
-                    const soh = item.stock_on_hand.toFixed(2);
-                    const v = counts[item.upc];
-                    const hasCount = v != null && v !== '';
-                    const countVal = hasCount ? (Math.round(parseFloat(v) || 0)).toString() : '';
-                    const varVal = hasCount ? (Math.round(parseFloat(v) || 0) - item.stock_on_hand).toFixed(2) : '';
-                    const varClass = parseFloat(varVal) < 0 ? 'var-negative' : (parseFloat(varVal) > 0 ? 'var-positive' : '');
-
-                    html += `<tr class="parent-row">
-                        <td>${visibleIdx}</td>
-                        <td class="upc">${escapeHtml(item.upc)}</td>
-                        <td class="description">${escapeHtml(item.description)}</td>
-                        <td class="stock-on-hand">${soh}</td>
-                        <td class="count-val">${countVal}</td>
-                        <td class="variance-cell ${varClass}">${varVal}</td>
-                        <td><div class="count-box"></div></td>
-                    </tr>`;
-
-                    if (isParent) {
-                        const children = childrenByParent[item.upc];
-                        children.forEach(child => {
-                            const childHasTicket = tickets.has(child.upc);
-                            const childSoh = child.stock_on_hand.toFixed(2);
-                            const cv = counts[child.upc];
-                            const childHasCount = cv != null && cv !== '';
-                            const childCountVal = childHasCount ? (Math.round(parseFloat(cv) || 0)).toString() : '';
-                            const childVarVal = childHasCount ? (Math.round(parseFloat(cv) || 0) - child.stock_on_hand).toFixed(2) : '';
-                            const childVarClass = parseFloat(childVarVal) < 0 ? 'var-negative' : (parseFloat(childVarVal) > 0 ? 'var-positive' : '');
-
-                            html += `<tr class="child-row">
-                                <td></td>
-                                <td class="upc"><span class="indent-marker">├─</span>${escapeHtml(child.upc)}</td>
-                                <td class="description">${escapeHtml(child.description)}</td>
-                                <td class="stock-on-hand">${childSoh}</td>
-                                <td class="count-val">${childCountVal}</td>
-                                <td class="variance-cell ${childVarClass}">${childVarVal}</td>
-                                <td><div class="count-box"></div></td>
-                            </tr>`;
-                        });
-                    }
-                });
-            } else {
-                // ── Blank layout: #, UPC, Description, SoH, Count, Ticket ──
-                visibleItems.forEach(({ item, isParent }) => {
-                    visibleIdx++;
-                    const hasTicket = tickets.has(item.upc);
-                    const soh = item.stock_on_hand.toFixed(2);
-
-                    html += `<tr class="parent-row">
-                        <td>${visibleIdx}</td>
-                        <td class="upc">${escapeHtml(item.upc)}</td>
-                        <td class="description">${escapeHtml(item.description)}</td>
-                        <td class="stock-on-hand">${soh}</td>
-                        <td><div class="count-box"></div></td>
-                        <td class="ticket-cell"><input type="checkbox" ${hasTicket ? 'checked' : ''}></td>
-                    </tr>`;
-
-                    if (isParent) {
-                        const children = childrenByParent[item.upc];
-                        children.forEach(child => {
-                            const childHasTicket = tickets.has(child.upc);
-                            const childSoh = child.stock_on_hand.toFixed(2);
-
-                            html += `<tr class="child-row">
-                                <td></td>
-                                <td class="upc"><span class="indent-marker">├─</span>${escapeHtml(child.upc)}</td>
-                                <td class="description">${escapeHtml(child.description)}</td>
-                                <td class="stock-on-hand">${childSoh}</td>
-                                <td><div class="count-box"></div></td>
-                                <td class="ticket-cell"><input type="checkbox" ${childHasTicket ? 'checked' : ''}></td>
-                            </tr>`;
-                        });
-                    }
-                });
-            }
-
-            tbody.innerHTML = html;
-
-            // Small delay to ensure DOM is updated before print dialog
-            setTimeout(() => {
-                window.print();
-            }, 100);
-        }
-
-        // ─────────────────────────────────────
         //  Reset
         // ─────────────────────────────────────
         function resetAll() {
@@ -2135,11 +1633,11 @@
                         <p>Select a department and/or supplier, then click Search</p>
                     </div>
                 </td></tr>`;
+            document.getElementById('stats-bar').style.display = 'none';
+            document.getElementById('lookup-bar').style.display = 'none';
             document.getElementById('lookup-input').value = '';
             lookupFilter = '';
             document.getElementById('department-select').value = 'ALL';
-            // Reset tracking boxes
-            updateStats(0, 0, 0, 0, 0);
             // Reset supplier list to full list
             const supSel = document.getElementById('supplier-select');
             supSel.innerHTML = '<option value="ALL">All Suppliers</option>';
