@@ -1235,7 +1235,6 @@
                 const input = e.target;
                 if (!input.classList.contains('count-input')) return;
                 if (e.key !== 'Enter') return;
-                if (window.__barcodeModeActive) { e.stopPropagation(); return; }
                 e.preventDefault();
                 const inputs = Array.from(document.querySelectorAll('.count-input'));
                 const idx = inputs.indexOf(input);
@@ -1928,8 +1927,13 @@
                 if (btn) btn.classList.add('active');
                 setTimeout(() => {
                     const input = document.getElementById('barcode-input');
-                    if (input) { input.value = ''; promptText = ''; input.focus(); input.select(); }
-                }, 0)
+                    if (!input) return;
+                    input.value = '';
+                    promptText = '';
+                    input.focus();
+                    input.select();
+                    if (!input.matches(':focus')) input.focus();
+                }, 80)
                 setBarcodeStatus('');
                 pendingBarcodeUPCs = [];
             } else {
@@ -2014,18 +2018,18 @@
                 }, 0)
                 setBarcodeStatus('');
             };
-            countInput.addEventListener('change', moveFocusBack, { once: true });
+            const redirectToBarcode = () => {
+                const input = document.getElementById('barcode-input');
+                if (input) { input.value = ''; promptText = ''; input.focus(); input.select(); }
+                setBarcodeStatus('');
+            };
+            countInput.addEventListener('change', redirectToBarcode, { once: true });
             countInput.addEventListener('keydown', function h(e) {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' || e.key === 'Tab') {
                     e.preventDefault();
                     countInput.removeEventListener('keydown', h);
-                    moveFocusBack();
+                    redirectToBarcode();
                     return;
-                }
-                if (e.key === 'Tab') {
-                    e.preventDefault();
-                    countInput.removeEventListener('keydown', h);
-                    moveFocusBack();
                 }
             }, { once: true });
         }
@@ -2350,6 +2354,16 @@
         //  Reset
         // ─────────────────────────────────────
         function resetAll() {
+            if (window.__barcodeModeActive || barcodeMode) {
+                const bar = document.getElementById('barcode-mode-bar');
+                const btn = document.querySelector('.btn-barcode-mode');
+                if (bar) bar.classList.remove('open');
+                if (btn) btn.classList.remove('active');
+                barcodeMode = false;
+                window.__barcodeModeActive = false;
+                promptText = '';
+                pendingBarcodeUPCs = [];
+            }
             allItems = [];
             counts = {};
             tickets = new Set();
