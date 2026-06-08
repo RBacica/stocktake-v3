@@ -1928,6 +1928,7 @@
         }
         function toggleBarcodeMode() {
             barcodeMode = !barcodeMode;
+            window.__barcodeModeActive = barcodeMode;
             const bar = document.getElementById('barcode-mode-bar');
             const btn = document.querySelector('.btn-barcode-mode');
             if (barcodeMode) {
