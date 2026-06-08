@@ -1,52 +1,4 @@
-# Stocktake-v3 — SQL Queries & Barcode Scan Flow
-
-## Current SQL Queries
-
-### 1. Barcode Lookup
-File: `src/db.rs`
-
-```sql
-SELECT UPC FROM ItemBarcodes WHERE barcode = '<safe_barcode>'
-```
-
-- Input is sanitized by replacing single quotes with doubled single quotes.
-- Returns `Vec<String>` of matched UPCs.
-
-### 2. Main Item Search
-File: `src/db.rs`
-
-```sql
-SELECT
-    i.UPC,
-    i.[Description],
-    i.[Department],
-    i.[Supplier],
-    (
-        SELECT TOP 1 CAST((m.QtyOnHand + m.Quantity) AS FLOAT)
-        FROM [ItemMovement] m
-        WHERE m.UPC = i.UPC
-        ORDER BY m.ID Desc
-    ) AS StockOnHand,
-    ISNULL(i.ParentUPC, '') AS ParentUPC,
-    ISNULL(i.SellingQty, 0) AS SellingQty
-FROM Items i
-WHERE i.InActive = '0'
-    -- optional department clause
-    -- optional supplier clause
-ORDER BY i.[Description]
-```
-
-### 3. Single-Item Stock Refresh
-File: `src/db.rs`
-
-```sql
-SELECT TOP 1 CAST((m.QtyOnHand + m.Quantity) AS FLOAT) AS StockOnHand
-FROM [ItemMovement] m
-WHERE m.UPC = '<upc>'
-ORDER BY m.ID DESC
-```
-
----
+# Stocktake-v3 — Barcode Scan Flow
 
 ## Barcode Scan Handling Flow
 
@@ -103,4 +55,3 @@ ORDER BY m.ID DESC
 
 - Latest Windows build zip: `~/RussellShared/HermesFiles/HermesOutput/CustomStockTakeApp-V3-B001-<timestamp>.zip`
 - Latest project backup: `~/RussellShared/HermesFiles/HermesOutput/stocktake-v3-backup-<timestamp>.zip`
-- Latest working zip used as frontend source during fixes: `CustomStockTakeApp-V3-B001-20260608_171937.zip`

@@ -180,7 +180,10 @@ The filename always reflects the latest save timestamp.
 
 ### 1. Search for Items
 
-- Select a **Department** and/or **Supplier** from the dropdowns.
+- Select a **Department** from the dropdown.
+- If the selected department is **Spirits**, a **Sub-Department** dropdown
+  appears below it — optionally select a sub-department to further filter.
+- Select a **Supplier** from the dropdown (filtered by selected department).
 - Click **Search**.
 - The app queries the database and displays matching active items.
 - **Parent items** automatically include their children (e.g. 6-packs, 12-packs)
@@ -189,9 +192,11 @@ The filename always reflects the latest save timestamp.
 ### 2. Enter Counts
 
 - Type the physical count into the **Count** input for each item.
-- The **Variance** column updates live: `count − stock_on_hand`.
+- The **Variance** column updates live.
 - For parent items, variance is **combined**: parent count + (child count ×
   child's selling quantity) − parent stock_on_hand.
+- Variance display: `+nnn.nn` / `-nnn.nn` with sign prefix; values within
+  ±0.03 display as `0.00`.
 
 ### 3. Mark Items for Ticket Printing (Optional)
 
@@ -221,6 +226,50 @@ The filename always reflects the latest save timestamp.
 - **Count file** → Open in **Infinity** stocktake program via count-file import.
 - **Ticket file** → Open in **Infinity Labels** program to print price tickets /
   barcode labels.
+
+---
+
+## Search Criteria
+
+| Criteria | Type | Required | Description |
+|----------|------|----------|-------------|
+| Department | Dropdown | Yes | Filter by department. Selecting "All Departments" shows everything. |
+| Sub-Department | Dropdown | No | Only visible when "Spirits" department is selected. Filters by sub-department within Spirits. |
+| Supplier | Dropdown | No | Filter by supplier. List is filtered based on selected department. |
+
+---
+
+## Display Formatting
+
+### UPC Column
+- Compact format: `nn..nnnnnn` (first 2 digits + `..` + last 6 digits)
+- If UPC ≤ 8 characters: displayed as-is
+
+### StockOnHand Column
+- Whole numbers: `475` (no decimal)
+- With decimals: `12.50`
+
+### Variance Column
+- `|variance| < 0.03` → `0.00` (no prefix, grey)
+- Positive → `+nnn.nn` (green)
+- Negative → `-nnn.nn` (red)
+- Parent combined: same format with `Total` label below the number
+
+### Parent/Child Grouping
+- Parent rows display combined variance (parent + all children contribution)
+- Child rows are nested directly under their parent
+- Children are hidden from top-level iteration
+- Filters (variance-only, ticketed-only) inherit from parent to children
+
+---
+
+## Barcode Mode
+
+- Toggle **Barcode Mode** to enable barcode scanning.
+- When enabled, a barcode input bar appears at the top of the results.
+- Scanning a barcode looks up the item and focuses its count input.
+- After entering a count, focus returns to the barcode input for the next scan.
+- Barcode Mode is turned off when Reset is clicked.
 
 ---
 
@@ -258,4 +307,4 @@ stocktake_output/
 | "connection_string is empty" | Config not filled in | Edit `config.toml` with your SQL Server details |
 | "Could not bind to..." | Port already in use | Change `port` in `config.toml` |
 | "Database error" in UI | SQL Server unreachable | Check connection string and network |
-| SOH shows as integer (77 instead of 77.2) | Old binary | Rebuild from latest source |
+| Sub-department dropdown not showing | Only visible for "Spirits" department | Select Spirits department first |
