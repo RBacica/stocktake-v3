@@ -77,14 +77,30 @@ ORDER BY m.ID DESC
 
 ---
 
+## Focus Implementation Notes
+
+- Barcode bar visibility is controlled by the CSS class `.open` on `#barcode-mode-bar`.
+- CSS uses `visibility/opacity/max-height` for the show/hide transition, so no inline `display:none` overrides the class state.
+- A dedicated `setFocusToBarcodeInput()` helper centralizes focus/clear/select logic for barcode input.
+- `toggleBarcodeMode` opens the bar and defers focus via `setTimeout` so the class transition completes first.
+
+---
+
 ## Frontend Entry Points
 
 - `toggleBarcodeMode()` — toggles barcode bar visibility and focus
 - `resolveScannedBarcode(value)` — lookup and visible-match resolution
 - `focusItemForBarcode(upc)` — count-input focus + return-to-barcode behavior
 - `itemIsVisible(candidate)` — filter-aware visibility check
+- `setFocusToBarcodeInput()` — canonical barcode input focus helper
 
 ## Backend Entry Points
 
 - `GET /api/barcode-lookup` (`server.rs`)
 - `pool.barcode_lookup_upcs(barcode)` (`db.rs`)
+
+## Build / Backup Reference
+
+- Latest Windows build zip: `~/RussellShared/HermesFiles/HermesOutput/CustomStockTakeApp-V3-B001-<timestamp>.zip`
+- Latest project backup: `~/RussellShared/HermesFiles/HermesOutput/stocktake-v3-backup-<timestamp>.zip`
+- Latest working zip used as frontend source during fixes: `CustomStockTakeApp-V3-B001-20260608_171937.zip`
