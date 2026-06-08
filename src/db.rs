@@ -28,6 +28,17 @@ pub struct UpcQuery {
     pub upc: Option<String>,
 }
 
+/// Query string params for `/api/barcode-lookup`.
+#[derive(Debug, Deserialize)]
+pub struct BarcodeQuery {
+    pub barcode: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct BarcodeLookupResult {
+    pub upcs: Vec<String>,
+}
+
 /// Query string params for `/api/suppliers-for-dept` (department filter).
 #[derive(Debug, Deserialize)]
 pub struct DeptQuery {
@@ -322,6 +333,29 @@ impl DbPool {
             }
         }
         Ok(0.0)
+    }
+
+    /// Return every UPC mapped from a barcode.
+    /// Query: SELECT UPC FROM ItemBarcodes WHERE barcode = '<barcode>'
+    pub async fn barcode_lookup_upcs(&self, barcode: &str) -> Result<Vec<String>, DbError> {
+        let mut conn = self.pool.get().await.map_err(|e| DbError::Connection(e.to_string()))?;
+        let safe_barcode = barcode.replace('\'', "''");
+        let query = format!(
+            "SELECT UPC FROM ItemBarcodes WHERE barcode = '{}'",
+            safe_barcode
+        );
+        let mut stream = conn.query(&query, &[])
+            .await
+            .map_err(|e| DbError::Query(e.to_string()))?;
+
+        let mut upcs = Vec::new();
+        while let Some(item) = stream.next().await {
+            let item = item.map_err(|e| DbError::Query(e.to_string()))?;
+            if let QueryItem::Row(row) = item {
+                upcs.push(cell_to_string(&row, 0));
+            }
+        }
+        Ok(upcs)
     }
 
     /// Fetch suppliers that appear in items belonging to a given department.

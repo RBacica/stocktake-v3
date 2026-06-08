@@ -15,7 +15,8 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
         .service(web::resource("/api/suppliers-for-dept").route(web::get().to(get_suppliers_for_dept)))
         .service(web::resource("/api/search").route(web::get().to(search_items)))
         .service(web::resource("/api/save").route(web::post().to(save_counts)))
-        .service(web::resource("/api/refresh-upc").route(web::get().to(refresh_upc)));
+        .service(web::resource("/api/refresh-upc").route(web::get().to(refresh_upc)))
+        .service(web::resource("/api/barcode-lookup").route(web::get().to(barcode_lookup)));
 }
 
 // ─────────────────────────────────────────────
@@ -92,6 +93,31 @@ async fn refresh_upc(
         })),
         Err(e) => {
             eprintln!("Failed to refresh upc {}: {}", upc, e);
+            HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": format!("Database error: {}", e)
+            }))
+        }
+    }
+}
+
+/// GET /api/barcode-lookup?barcode=<Input>
+/// Query ItemBarcodes for matching barcodes and return all matched UPCs.
+/// Frontend falls back to using <Input> as UPC if no matches are returned.
+async fn barcode_lookup(
+    pool: web::Data<db::DbPool>,
+    query: web::Query<db::BarcodeQuery>,
+) -> HttpResponse {
+    let barcode = query.barcode.clone().unwrap_or_default();
+    if barcode.is_empty() {
+        return HttpResponse::BadRequest().json(serde_json::json!({
+            "error": "Missing barcode query parameter"
+        }));
+    }
+
+    match pool.barcode_lookup_upcs(&barcode).await {
+        Ok(upcs) => HttpResponse::Ok().json(db::BarcodeLookupResult { upcs }),
+        Err(e) => {
+            eprintln!("Barcode lookup failed: {}", e);
             HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": format!("Database error: {}", e)
             }))

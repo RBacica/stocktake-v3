@@ -1034,6 +1034,14 @@
                     <input type="checkbox" id="show-ticketed-only">
                     <label for="show-ticketed-only">List Tickets</label>
                 </div>
+                <div style="margin-left:auto;">
+                    <button class="btn btn-barcode-mode" onclick="toggleBarcodeMode()">Barcode Mode</button>
+                </div>
+            </div>
+            <!-- Barcode scanning bar -->
+            <div class="barcode-mode-bar" id="barcode-mode-bar">
+                <input type="text" class="barcode-input" id="barcode-input" placeholder="Scan barcode..." autocomplete="off">
+                <span class="barcode-status" id="barcode-status"></span>
             </div>
             <!-- Row 3: Filter -->
             <div class="toolbar-row">
@@ -1119,6 +1127,9 @@
         let showVarianceOnly = false;
         let showUncountedOnly = false;
         let showTicketedOnly = false;
+        let barcodeMode = false;
+        let promptText = '';
+        let pendingBarcodeUPCs = [];
         let treatNoCountAsZero = true;
         // counts[upc] = string entered by the user. Lives in JS state so it
         // survives full table re-renders (variance filter, refresh, clear).
@@ -1841,6 +1852,124 @@
             treatNoCountAsZero = this.checked;
             document.getElementById('zero-toggle').classList.toggle('active', this.checked);
         });
+
+        function updatePromptText() {
+            if (!barcodeMode) return;
+            if (document.getElementById('barcode-input')) promptText = document.getElementById('barcode-input').value.trim();
+        }
+
+        function setBarcodeStatus(msg, isError) {
+            const el = document.getElementById('barcode-status');
+            if (!el) return;
+            el.textContent = msg || '';
+            el.className = 'barcode-status' + (isError ? ' error' : '');
+        }
+
+        function toggleBarcodeMode() {
+            barcodeMode = !barcodeMode;
+            const bar = document.getElementById('barcode-mode-bar');
+            const btn = document.querySelector('.btn-barcode-mode');
+            if (barcodeMode) {
+                if (bar) bar.classList.add('open');
+                if (btn) btn.classList.add('active');
+                if (document.getElementById('barcode-input')) {
+                    document.getElementById('barcode-input').value = '';
+                    promptText = '';
+                    document.getElementById('barcode-input').focus();
+                }
+                setBarcodeStatus('');
+                pendingBarcodeUPCs = [];
+            } else {
+                if (bar) bar.classList.remove('open');
+                if (btn) btn.classList.remove('active');
+                setBarcodeStatus('');
+                promptText = '';
+                pendingBarcodeUPCs = [];
+            }
+        }
+
+        async function resolveScannedBarcode(value) {
+            updatePromptText();
+            const raw = value || promptText;
+            if (!raw) {
+                setBarcodeStatus('Scan or type a barcode first', true);
+                if (document.getElementById('barcode-input')) document.getElementById('barcode-input').focus();
+                return;
+            }
+            setBarcodeStatus('Looking up: ' + raw);
+            try {
+                const res = await fetch('/api/barcode-lookup?barcode=' + encodeURIComponent(raw));
+                if (!res.ok) {
+                    const body = await res.json().catch(() => ({}));
+                    throw new Error(body.error || 'Lookup failed');
+                }
+                const data = await res.json();
+                const upcs = Array.isArray(data.upcs) ? data.upcs : [];
+                let resolvedUpcs = upcs;
+                if (!resolvedUpcs.length) resolvedUpcs = [raw];
+                const visible = (candidate) => {
+                    for (const item of allItems) {
+                        if (item.upc !== candidate) continue;
+                        const isParent = childrenByParent[item.upc] && childrenByParent[item.upc].length > 0;
+                        const variance = isParent ? getParentCombinedVariance(item.upc) : getItemVariance(item.upc);
+                        const hasVar = Math.abs(variance) >= 0.05;
+                        const hideVariance = showVarianceOnly && !hasVar;
+                        const hideTicket = showTicketedOnly && !tickets.has(item.upc);
+                        const hideUncounted = showUncountedOnly && !isUncounted;
+                        const hideLookup = lookupFilter !== '' && !item.description.toLowerCase().includes(lookupFilter);
+                        if (hideVariance || hideTicket || hideUncounted || hideLookup) continue;
+                        return true;
+                    }
+                    return false;
+                };
+                for (const candidate of resolvedUpcs) {
+                    if (visible(candidate)) {
+                        await focusItemForBarcode(candidate);
+                        return;
+                    }
+                }
+                setBarcodeStatus('Barcode not found in current view', true);
+                if (document.getElementById('barcode-input')) {
+                    document.getElementById('barcode-input').focus();
+                    document.getElementById('barcode-input').select();
+                }
+            } catch (e) {
+                console.error(e);
+                setBarcodeStatus('Lookup error: ' + (e.message || e), true);
+                if (document.getElementById('barcode-input')) {
+                    document.getElementById('barcode-input').focus();
+                    document.getElementById('barcode-input').select();
+                }
+            }
+        }
+
+        async function focusItemForBarcode(upc) {
+            const countInput = document.getElementById('count-' + upc);
+            if (!countInput) {
+                setBarcodeStatus('Item not visible: ' + upc, true);
+                if (document.getElementById('barcode-input')) document.getElementById('barcode-input').focus();
+                return;
+            }
+            countInput.focus();
+            countInput.select();
+            setBarcodeStatus('Found: ' + upc);
+            const back = () => {
+                if (document.getElementById('barcode-input')) {
+                    document.getElementById('barcode-input').value = '';
+                    promptText = '';
+                    document.getElementById('barcode-input').focus();
+                }
+                setBarcodeStatus('');
+            };
+            countInput.addEventListener('change', back, { once: true });
+            countInput.addEventListener('keydown', function h(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    countInput.removeEventListener('keydown', h);
+                    back();
+                }
+            }, { once: true });
+        }
 
         // ─────────────────────────────────────
         //  Stats Bar
