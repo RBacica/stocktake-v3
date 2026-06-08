@@ -783,7 +783,8 @@
             font-size: 0.65rem;
             color: #888;
             font-weight: 400;
-            margin-left: 4px;
+            display: block;
+            text-align: center;
         }
 
         /* File input for loading count file */
@@ -1433,17 +1434,23 @@
                 // For regular items, show normal variance
                 const variance = isParent ? getParentCombinedVariance(item.upc) : getItemVariance(item.upc);
                 const countStr = counts[item.upc] != null ? counts[item.upc] : '';
-                // hasVar: ignore anything within ±0.05 — fractional noise from SellingQty
+                // hasVar: ignore anything within ±0.03 — fractional noise from SellingQty
                 // rounding (e.g. 0.33 vs 0.34) should not trigger a highlight
-                const hasVar = Math.abs(variance) >= 0.05;
+                const hasVar = Math.abs(variance) >= 0.03;
                 const hasCount = countStr !== '' && countStr !== undefined;
                 const countNum = hasCount ? parseFloat(countStr) || 0 : null;
                 const isUncounted = !hasCount || isNaN(countNum);
-                // Display: 2dp, but when fractional part >= 0.95, round up to whole
-                // e.g. 0.66→"0.66", 0.99→"1", 1.34→"1.34", 2.97→"3"
-                const displayVal = (Math.abs(variance) % 1 >= 0.95) ? Math.round(variance) : parseFloat(variance.toFixed(2));
-                const signedVar = displayVal > 0 ? `+${displayVal}` : displayVal.toString();
-                const varClass = displayVal > 0 ? 'positive' : displayVal < 0 ? 'negative' : 'zero';
+                // Display: always nnn.nn, sign prefix only when count entered and variance ≠ 0
+                // no count → "0.00", count with 0 variance → "0.00", positive → "+1.50", negative → "-2.33"
+                const varianceDisplay = Math.abs(variance) < 0.03 ? 0 : variance;
+                const displayVal = varianceDisplay.toFixed(2);
+                let signedVar;
+                if (!hasCount || varianceDisplay === 0) {
+                    signedVar = displayVal;
+                } else {
+                    signedVar = (varianceDisplay > 0 ? '+' : '') + displayVal;
+                }
+                const varClass = varianceDisplay > 0 ? 'positive' : varianceDisplay < 0 ? 'negative' : 'zero';
                 const highlightClass = (countStr !== '' && hasVar) ? ' highlight' : '';
 
                 // Determine if row should be hidden by filters
@@ -1462,17 +1469,17 @@
                 const ticketQtyHtml = hasTicket
                     ? `<input type="number" class="ticket-qty-input" id="ticket-qty-${item.upc}" value="${ticketQty}" min="1" max="999" onchange="setTicketQty('${escapeJs(item.upc)}', parseInt(this.value)||1)" title="Ticket quantity">`
                     : '';
-                const combinedNote = isParent ? '<span class="combined-variance-note">(combined)</span>' : '';
+                const combinedNote = isParent ? '<span class="combined-variance-note">Total</span>' : '';
 
                 html += `<tr class="parent-row">
                     <td>${visibleIdx}</td>
-                    <td class="upc">${escapeHtml(item.upc)}</td>
+                    <td class="upc">${compactUpc(item.upc)}</td>
                     <td class="description">${escapeHtml(item.description)}${ticketDot}</td>
-                    <td class="stock-on-hand" id="soh-${item.upc}">${item.stock_on_hand.toFixed(2)}</td>
+                    <td class="stock-on-hand" id="soh-${item.upc}">${formatSoH(item.stock_on_hand)}</td>
                     <td><input type="number" class="count-input${highlightClass}" id="count-${item.upc}"
                         value="${escapeHtml(countStr)}" placeholder="--" min="0"
                         oninput="onCountChange('${escapeJs(item.upc)}')"></td>
-                    <td class="variance ${varClass}" id="var-${item.upc}">${signedVar}${combinedNote}</td>
+                    <td class="variance ${varClass}" id="var-${item.upc}"><span class="var-num">${signedVar}</span>${combinedNote}</td>
                     <td>
                         <div class="action-group">
                             <button class="action-btn refresh-btn" onclick="refreshOneItem('${escapeJs(item.upc)}')">Refresh</button>
@@ -1505,9 +1512,9 @@
 
                         html += `<tr class="child-row">
                             <td></td>
-                            <td class="upc child-indent">${escapeHtml(child.upc)}</td>
+                            <td class="upc child-indent">${compactUpc(child.upc)}</td>
                             <td class="description">${escapeHtml(child.description)}${childTicketDot}</td>
-                            <td class="stock-on-hand" id="soh-${child.upc}">${child.stock_on_hand.toFixed(2)}</td>
+                            <td class="stock-on-hand" id="soh-${child.upc}">${formatSoH(child.stock_on_hand)}</td>
                             <td><input type="number" class="count-input${childHighlightClass}" id="count-${child.upc}"
                                 value="${escapeHtml(childCountStr)}" placeholder="--" min="0"
                                 oninput="onCountChange('${escapeJs(child.upc)}')"></td>
@@ -1607,13 +1614,21 @@
                 const variance = getParentCombinedVariance(upc);
                 const varEl = document.getElementById(`var-${upc}`);
                 if (varEl) {
-                    const displayVal = (Math.abs(variance) % 1 >= 0.95) ? Math.round(variance) : parseFloat(variance.toFixed(2));
-                    const varClass = displayVal > 0 ? 'positive' : displayVal < 0 ? 'negative' : 'zero';
-                    varEl.textContent = (displayVal > 0 ? `+${displayVal}` : displayVal.toString()) + ' (combined)';
+                    const varianceDisplay = Math.abs(variance) < 0.03 ? 0 : variance;
+                    const displayVal = varianceDisplay.toFixed(2);
+                    const hasCount = counts[upc] != null && counts[upc] !== '';
+                    const signedVal = (!hasCount || varianceDisplay === 0) ? displayVal : (varianceDisplay > 0 ? '+' : '') + displayVal;
+                    const varClass = varianceDisplay > 0 ? 'positive' : varianceDisplay < 0 ? 'negative' : 'zero';
+                    const numSpan = varEl.querySelector('.var-num');
+                    if (numSpan) {
+                        numSpan.textContent = signedVal;
+                    } else {
+                        varEl.textContent = signedVal;
+                    }
                     varEl.className = `variance ${varClass}`;
                 }
                 if (inputEl) {
-                    const hasVar = Math.abs(variance) >= 0.05;
+                    const hasVar = Math.abs(variance) >= 0.03;
                     inputEl.classList.toggle('highlight', hasVar);
                 }
             } else if (isChild) {
@@ -1624,15 +1639,23 @@
                     const parentVariance = getParentCombinedVariance(parentUpc2);
                     const parentVarEl = document.getElementById(`var-${parentUpc2}`);
                     if (parentVarEl) {
-                        const displayVal = (Math.abs(parentVariance) % 1 >= 0.95) ? Math.round(parentVariance) : parseFloat(parentVariance.toFixed(2));
-                        const parentVarClass = displayVal > 0 ? 'positive' : displayVal < 0 ? 'negative' : 'zero';
-                        parentVarEl.textContent = (displayVal > 0 ? `+${displayVal}` : displayVal.toString()) + ' (combined)';
+                        const varianceDisplay = Math.abs(parentVariance) < 0.03 ? 0 : parentVariance;
+                        const displayVal = varianceDisplay.toFixed(2);
+                        const parentHasCount = counts[parentUpc2] != null && counts[parentUpc2] !== '';
+                        const signedVal = (!parentHasCount || varianceDisplay === 0) ? displayVal : (varianceDisplay > 0 ? '+' : '') + displayVal;
+                        const parentVarClass = varianceDisplay > 0 ? 'positive' : varianceDisplay < 0 ? 'negative' : 'zero';
+                        const numSpan = parentVarEl.querySelector('.var-num');
+                        if (numSpan) {
+                            numSpan.textContent = signedVal;
+                        } else {
+                            parentVarEl.textContent = signedVal;
+                        }
                         parentVarEl.className = `variance ${parentVarClass}`;
                     }
                     const parentInputEl = document.getElementById(`count-${parentUpc2}`);
                     if (parentInputEl) {
                         const parentCountStr = counts[parentUpc2];
-                        const hasVar = Math.abs(parentVariance) >= 0.05;
+                        const hasVar = Math.abs(parentVariance) >= 0.03;
                         parentInputEl.classList.toggle('highlight', (parentCountStr != null && parentCountStr !== '' && hasVar));
                     }
                 }
@@ -1641,12 +1664,15 @@
                 const variance = getItemVariance(upc);
                 const varEl = document.getElementById(`var-${upc}`);
                 if (!varEl) return;
-                const displayVal = (Math.abs(variance) % 1 >= 0.95) ? Math.round(variance) : parseFloat(variance.toFixed(2));
-                const varClass = displayVal > 0 ? 'positive' : displayVal < 0 ? 'negative' : 'zero';
-                varEl.textContent = displayVal > 0 ? `+${displayVal}` : displayVal.toString();
+                const varianceDisplay = Math.abs(variance) < 0.03 ? 0 : variance;
+                const displayVal = varianceDisplay.toFixed(2);
+                const hasCount = counts[upc] != null && counts[upc] !== '';
+                const signedVal = (!hasCount || varianceDisplay === 0) ? displayVal : (varianceDisplay > 0 ? '+' : '') + displayVal;
+                const varClass = varianceDisplay > 0 ? 'positive' : varianceDisplay < 0 ? 'negative' : 'zero';
+                varEl.textContent = signedVal;
                 varEl.className = `variance ${varClass}`;
                 if (inputEl) {
-                    const hasVar = Math.abs(variance) >= 0.05;
+                    const hasVar = Math.abs(variance) >= 0.03;
                     inputEl.classList.toggle('highlight', hasVar);
                 }
             }
@@ -1676,14 +1702,14 @@
                 const isParent = childrenByParent[item.upc] && childrenByParent[item.upc].length > 0;
                 if (isParent) {
                     // Parent: use combined variance (epsilon for float comparison)
-                    return Math.abs(getParentCombinedVariance(item.upc)) >= 0.05;
+                    return Math.abs(getParentCombinedVariance(item.upc)) >= 0.03;
                 }
                 // Standalone item: count - SOH
                 const v = counts[item.upc];
                 if (v == null || v === '') return false;
                 const count = parseFloat(v) || 0;
                 const variance = count - item.stock_on_hand;
-                return Math.abs(variance) >= 0.05;
+                return Math.abs(variance) >= 0.03;
             }).length;
         }
 
@@ -1733,7 +1759,7 @@
                         item.stock_on_hand = r.stock_on_hand;
                         // Update the SOH cell
                         const sohEl = document.getElementById(`soh-${r.upc}`);
-                        if (sohEl) sohEl.textContent = r.stock_on_hand.toFixed(2);
+                        if (sohEl) sohEl.textContent = formatSoH(r.stock_on_hand);
                     }
                 });
 
@@ -1797,7 +1823,7 @@
                     if (item) {
                         item.stock_on_hand = r.stock_on_hand;
                         const sohEl = document.getElementById(`soh-${r.upc}`);
-                        if (sohEl) sohEl.textContent = r.stock_on_hand.toFixed(2);
+                        if (sohEl) sohEl.textContent = formatSoH(r.stock_on_hand);
                     }
                 });
 
@@ -2000,7 +2026,7 @@
                 if (item.upc !== candidate) continue;
                 const isParent = childrenByParent[item.upc] && childrenByParent[item.upc].length > 0;
                 const variance = isParent ? getParentCombinedVariance(item.upc) : getItemVariance(item.upc);
-                const hasVar = Math.abs(variance) >= 0.05;
+                const hasVar = Math.abs(variance) >= 0.03;
                 const hideVariance = showVarianceOnly && !hasVar;
                 const hideTicket = showTicketedOnly && !tickets.has(item.upc);
                 const hideUncounted = showUncountedOnly && !isUncounted;
@@ -2229,7 +2255,7 @@
 
                 const isParent = childrenByParent[item.upc] && childrenByParent[item.upc].length > 0;
                 const variance = isParent ? getParentCombinedVariance(item.upc) : getItemVariance(item.upc);
-                const hasVar = Math.abs(variance) >= 0.05;
+                const hasVar = Math.abs(variance) >= 0.03;
 
                 const hideVariance = showVarianceOnly && !hasVar;
                 const hideTicket = showTicketedOnly && !tickets.has(item.upc);
@@ -2277,16 +2303,17 @@
                 visibleItems.forEach(({ item, isParent, variance }) => {
                     visibleIdx++;
                     const hasTicket = tickets.has(item.upc);
-                    const soh = item.stock_on_hand.toFixed(2);
+                    const soh = formatSoH(item.stock_on_hand);
                     const v = counts[item.upc];
                     const hasCount = v != null && v !== '';
                     const countVal = hasCount ? (Math.round(parseFloat(v) || 0)).toString() : '';
-                    const varVal = hasCount ? (Math.round(parseFloat(v) || 0) - item.stock_on_hand).toFixed(2) : '';
-                    const varClass = parseFloat(varVal) < 0 ? 'var-negative' : (parseFloat(varVal) > 0 ? 'var-positive' : '');
+                    const rawVar = hasCount ? Math.round(parseFloat(v) || 0) - item.stock_on_hand : 0;
+                    const varVal = (rawVar === 0) ? rawVar.toFixed(2) : (rawVar > 0 ? '+' : '') + rawVar.toFixed(2);
+                    const varClass = rawVar < 0 ? 'var-negative' : (rawVar > 0 ? 'var-positive' : '');
 
                     html += `<tr class="parent-row">
                         <td>${visibleIdx}</td>
-                        <td class="upc">${escapeHtml(item.upc)}</td>
+                        <td class="upc">${compactUpc(item.upc)}</td>
                         <td class="description">${escapeHtml(item.description)}</td>
                         <td class="stock-on-hand">${soh}</td>
                         <td class="count-val">${countVal}</td>
@@ -2298,16 +2325,17 @@
                         const children = childrenByParent[item.upc];
                         children.forEach(child => {
                             const childHasTicket = tickets.has(child.upc);
-                            const childSoh = child.stock_on_hand.toFixed(2);
+                            const childSoh = formatSoH(child.stock_on_hand);
                             const cv = counts[child.upc];
                             const childHasCount = cv != null && cv !== '';
                             const childCountVal = childHasCount ? (Math.round(parseFloat(cv) || 0)).toString() : '';
-                            const childVarVal = childHasCount ? (Math.round(parseFloat(cv) || 0) - child.stock_on_hand).toFixed(2) : '';
-                            const childVarClass = parseFloat(childVarVal) < 0 ? 'var-negative' : (parseFloat(childVarVal) > 0 ? 'var-positive' : '');
+                            const childRawVar = childHasCount ? Math.round(parseFloat(cv) || 0) - child.stock_on_hand : 0;
+                            const childVarVal = (childRawVar === 0) ? childRawVar.toFixed(2) : (childRawVar > 0 ? '+' : '') + childRawVar.toFixed(2);
+                            const childVarClass = childRawVar < 0 ? 'var-negative' : (childRawVar > 0 ? 'var-positive' : '');
 
                             html += `<tr class="child-row">
                                 <td></td>
-                                <td class="upc"><span class="indent-marker">├─</span>${escapeHtml(child.upc)}</td>
+                                <td class="upc"><span class="indent-marker">├─</span>${compactUpc(child.upc)}</td>
                                 <td class="description">${escapeHtml(child.description)}</td>
                                 <td class="stock-on-hand">${childSoh}</td>
                                 <td class="count-val">${childCountVal}</td>
@@ -2322,11 +2350,11 @@
                 visibleItems.forEach(({ item, isParent }) => {
                     visibleIdx++;
                     const hasTicket = tickets.has(item.upc);
-                    const soh = item.stock_on_hand.toFixed(2);
+                    const soh = formatSoH(item.stock_on_hand);
 
                     html += `<tr class="parent-row">
                         <td>${visibleIdx}</td>
-                        <td class="upc">${escapeHtml(item.upc)}</td>
+                        <td class="upc">${compactUpc(item.upc)}</td>
                         <td class="description">${escapeHtml(item.description)}</td>
                         <td class="stock-on-hand">${soh}</td>
                         <td><div class="count-box"></div></td>
@@ -2337,11 +2365,11 @@
                         const children = childrenByParent[item.upc];
                         children.forEach(child => {
                             const childHasTicket = tickets.has(child.upc);
-                            const childSoh = child.stock_on_hand.toFixed(2);
+                            const childSoh = formatSoH(child.stock_on_hand);
 
                             html += `<tr class="child-row">
                                 <td></td>
-                                <td class="upc"><span class="indent-marker">├─</span>${escapeHtml(child.upc)}</td>
+                                <td class="upc"><span class="indent-marker">├─</span>${compactUpc(child.upc)}</td>
                                 <td class="description">${escapeHtml(child.description)}</td>
                                 <td class="stock-on-hand">${childSoh}</td>
                                 <td><div class="count-box"></div></td>
@@ -2421,6 +2449,17 @@
             const div = document.createElement('div');
             div.textContent = str;
             return div.innerHTML;
+        }
+
+        function compactUpc(upc) {
+            const s = String(upc);
+            if (s.length <= 8) return escapeHtml(s);
+            return escapeHtml(s.slice(0, 2) + '..' + s.slice(-6));
+        }
+
+        function formatSoH(val) {
+            const n = parseFloat(val);
+            return n % 1 === 0 ? n.toString() : n.toFixed(2);
         }
     </script>
 </body>
