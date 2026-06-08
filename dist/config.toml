@@ -1,0 +1,44 @@
+# ───────────────────────────────────────────────────────────
+#  Stock Take — Example Configuration
+#  Rename / copy this file to "config.toml" next to stocktake.exe,
+#  then edit the values below for your environment.
+# ───────────────────────────────────────────────────────────
+#
+# NOTE ON BACKSLASHES: in TOML a backslash inside "double quotes" is an
+# escape character, so a Windows path or a named SQL instance must either
+# double its backslashes ("C:\\StockTakes", "MYPC\\SQLEXPRESS") OR use
+# single quotes, which take the text literally ('C:\StockTakes').
+
+[server]
+# Address to bind. Use "0.0.0.0" so other devices on the LAN can
+# reach the app; use "127.0.0.1" to restrict to this machine only.
+host = "127.0.0.1"
+
+# TCP port the web UI listens on. Open http://<this-pc-ip>:8080 in a browser.
+port = 8080
+
+# Where saved stock takes are written (relative to the .exe, or an
+# absolute path like "C:\\StockTakes"). Created automatically if missing.
+# Each save produces:  stocktake-YYYY-MM-DD-HH-MM-SS.txt  (CSV format)
+output_dir = "stocktake_output"
+
+[database]
+# MS SQL Server connection string.
+#
+# Simple key=value format (recommended):
+#   server=tcp:<host>,<port>;database=<db>;uid=<user>;pwd=<password>;encrypt=false;
+#
+# ADO.NET / ODBC style also works:
+#   Driver={ODBC Driver 17 for SQL Server};Server=<host>,<port>;Database=<db>;Uid=<user>;Pwd=<password>;Encrypt=no
+#
+# On Windows, TLS uses the built-in SChannel — no OpenSSL needed.
+# Set encrypt=true (and trust_cert=true for self-signed certs) to encrypt.
+# Encrypt options: "true" | "false" | "off" | "no"  (off/no = no TLS)
+#
+# Examples:
+#   Local SQL Server, no encryption:
+#     server=tcp:127.0.0.1,1433;database=StockDB;uid=sa;pwd=YourPassword;encrypt=false;
+#   Remote server, encrypted, self-signed cert:
+#     server=tcp:192.168.1.50,1433;database=StockDB;uid=stocktake;pwd=secret;encrypt=true;trust_cert=true;
+#
+connection_string = "server=tcp:127.0.0.1,1433;database=StockDB;uid=sa;pwd=changeme;encrypt=false;"

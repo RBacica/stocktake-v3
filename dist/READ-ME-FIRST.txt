@@ -1,0 +1,66 @@
+STOCKTAKE V3 — QUICK START (Windows)
+===================================
+
+1. Keep ALL of these together in one folder (do not separate them):
+      stocktake-v3.exe
+      config.toml
+      web\  (folder)
+
+2. Open config.toml in Notepad and set your SQL Server details under
+   [database] connection_string. Save the file.
+
+   *** IMPORTANT — BACKSLASHES IN config.toml ***
+   If your SQL Server uses a named instance like  MYPC\SQLEXPRESS  or your
+   password / path contains a backslash ( \ ), you MUST handle it, because in
+   a "double-quoted" value a single backslash is treated as an escape character
+   and the file will fail to load. Two safe options:
+      a) DOUBLE every backslash:
+            connection_string = "server=tcp:MYPC\\SQLEXPRESS,1433;..."
+      b) Use SINGLE quotes (no escaping needed):
+            connection_string = 'server=tcp:MYPC\SQLEXPRESS,1433;...'
+   (For a normal  server=tcp:<ip>,1433  connection there are no backslashes,
+    so you don't need to worry about this.)
+
+3. Double-click stocktake-v3.exe. A console window opens and stays open.
+   You should see:
+      Server ready. Open the address above in a browser.
+
+4. Open the address shown (e.g. http://127.0.0.1:8080) in your web browser.
+
+5. To stop the program, close the console window.
+
+WHAT'S NEW / IF SOMETHING GOES WRONG
+------------------------------------
+* The window no longer flashes and closes. If the program can't start,
+  it now prints the reason and waits — "Press Enter to close this window".
+  Read that message; it tells you exactly what to fix.
+  - "config.toml exists but could not be parsed ... invalid escape sequence"
+    means a backslash problem — see the BACKSLASHES note in step 2 above.
+    The message now points at the exact line/column to fix.
+  - "connection_string is empty" means config.toml loaded but the
+    connection_string is blank — fill it in under [database].
+  - "Could not bind to ..." means another program is using that port —
+    change "port" under [server] in config.toml.
+
+* The program now finds config.toml and the web\ folder next to the .exe
+  itself, so it works no matter how you launch it (double-click, shortcut,
+  or command line).
+
+* The web UI now loads even if the database is temporarily unreachable.
+  You'll only see a "Database error" inside the page when you try to load
+  departments/suppliers/search — fix the connection_string in config.toml
+  and the buttons start working without restarting your browser.
+
+* Saved stock takes are written to the "stocktake_output" folder created
+  next to stocktake-v3.exe (configurable via output_dir in config.toml).
+
+* See FEATURES.md for a full description of the count file and ticket file
+  formats, how they are loaded into Infinity, and the end-to-end workflow.
+
+* **Ticket labels** — click "Ticket" on any row to mark it for label printing.
+  On save, a .qry file is generated in the tickets/ subfolder. Ticketed items
+  always generate a .qry even if no counts were entered. If ONLY ticketed
+  items exist with zero counts, the .txt is skipped — only the .qry is written.
+
+TIP: To see startup messages on the command line, open Command Prompt in
+this folder and run:  stocktake-v3.exe

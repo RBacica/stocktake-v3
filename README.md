@@ -1,8 +1,8 @@
-# Stocktake v2
+# Stocktake v3
 
 A Rust web application for inventory stock takes. Connects to MS SQL Server (Infinity Back Office) and provides a browser-based UI for counting inventory items.
 
-## What's New in v2
+## What's New in v3
 
 - **Treat no count as zero** — toggle (on by default) that saves uncounted items as count 0
 - **Fixed counted tracker** — items with variance are now correctly counted
@@ -23,7 +23,7 @@ A Rust web application for inventory stock takes. Connects to MS SQL Server (Inf
 ## Project Structure
 
 ```
-stocktake-v2/
+stocktake-v3/
 ├── Cargo.toml              # Rust package manifest (edition 2021)
 ├── Cargo.lock              # Locked dependency versions
 ├── build.rs                # Build script — embeds Windows .ico icon via windres/winres
@@ -94,12 +94,12 @@ No extra prerequisites beyond the Rust toolchain. Visual Studio Build Tools are 
 
 ```bash
 # If cloning from a repository:
-git clone <repo-url> stocktake-v2
-cd stocktake-v2
+git clone <repo-url> stocktake-v3
+cd stocktake-v3
 
 # If working from a zip, extract it:
-unzip stocktake-v2-source.zip -d stocktake-v2
-cd stocktake-v2
+unzip stocktake-v3-source.zip -d stocktake-v3
+cd stocktake-v3
 ```
 
 ### Step 2: Create `config.toml`
@@ -119,12 +119,10 @@ connection_string = "server=tcp:YOUR_SERVER,1433;database=YOUR_DB;uid=YOUR_USER;
 [server]
 host = "0.0.0.0"
 port = 8080
-
-[output]
-dir = "./output"
+output_dir = "stocktake_output"
 ```
 
-> **Backslash note:** If your server uses a named instance (e.g. `MYPC\SQLEXPRESS`) or your password contains backslashes, either double them (`\\`) or wrap the value in single quotes (`'...'`).
+> **Backslash note:** If your server uses a named instance (e.g. `MYPC\\SQLEXPRESS`) or your password contains backslashes, either double them (`\\\\`) or wrap the value in single quotes (`'...'`).
 
 ### Step 3: Build
 
@@ -134,7 +132,7 @@ dir = "./output"
 cargo build --release
 ```
 
-Binary: `target/release/stocktake-v2`
+Binary: `target/release/stocktake-v3`
 
 #### Windows cross-compile (from Linux)
 
@@ -142,7 +140,7 @@ Binary: `target/release/stocktake-v2`
 cargo build --release --target x86_64-pc-windows-gnu
 ```
 
-Binary: `target/x86_64-pc-windows-gnu/release/stocktake-v2.exe`
+Binary: `target/x86_64-pc-windows-gnu/release/stocktake-v3.exe`
 
 #### Native Windows build
 
@@ -150,14 +148,14 @@ Binary: `target/x86_64-pc-windows-gnu/release/stocktake-v2.exe`
 cargo build --release
 ```
 
-Binary: `target\release\stocktake-v2.exe`
+Binary: `target\\release\\stocktake-v3.exe`
 
 ### Step 4: Package for distribution (Windows)
 
-The distribution zip requires three things in one folder:
+The distribution zip requires these items in one folder:
 
 ```
-stocktake.exe          ← the built binary
+stocktake-v3.exe       ← the built binary
 config.toml            ← from dist/
 READ-ME-FIRST.txt      ← from dist/
 web/                   ← the entire web/ folder (index.html, icons)
@@ -167,22 +165,22 @@ Create the zip:
 
 ```bash
 mkdir -p dist-package/web
-cp target/x86_64-pc-windows-gnu/release/stocktake-v2.exe dist-package/stocktake.exe
+cp target/x86_64-pc-windows-gnu/release/stocktake-v3.exe dist-package/stocktake-v3.exe
 cp dist/config.toml dist-package/
 cp dist/READ-ME-FIRST.txt dist-package/
 cp web/index.html dist-package/web/
 cp web/favicon.ico dist-package/web/
 cp web/icon.png dist-package/web/
 cp web/icon.svg dist-package/web/
-cd dist-package && zip -r ../stocktake-v2-windows.zip .
+cd dist-package && zip -r ../stocktake-v3-windows.zip .
 ```
 
 ### Step 5: Run
 
-Place the three items (exe, config.toml, web/ folder) in the same directory on the target machine, then:
+Place the items (`stocktake-v3.exe`, `config.toml`, `web/` folder) in the same directory on the target machine, then:
 
-- **Double-click** `stocktake.exe`, or
-- Run from a terminal: `./stocktake.exe`
+- **Double-click** `stocktake-v3.exe`, or
+- Run from a terminal: `./stocktake-v3.exe`
 
 The console will show the URL (e.g. `http://127.0.0.1:8080`). Open it in a browser.
 
