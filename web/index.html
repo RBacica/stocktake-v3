@@ -189,7 +189,7 @@
             gap: 4px;
             padding: 4px;
             border-radius: 12px;
-            background: rgba(255, 255, 255, 0.06);
+            background: transparent;
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
         }
 
@@ -244,16 +244,14 @@
         }
 
         .btn-print {
-            background: rgba(76, 175, 255, 0.18);
-            border-color: rgba(76, 175, 255, 0.6);
-            color: #9ad4ff;
-            box-shadow: none;
+            background: linear-gradient(135deg, #3a7bd5, #2d5aa3);
+            color: #fff;
         }
 
         .btn-print:hover {
-            background: rgba(76, 175, 255, 0.28);
-            border-color: rgba(76, 175, 255, 0.85);
-            color: #cceeff;
+            background: linear-gradient(135deg, #4a8be5, #3d6ab3);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(58, 123, 213, 0.3);
         }
 
         .btn-clear-lookup-danger {
@@ -1027,7 +1025,7 @@
                     <input type="checkbox" id="show-variance-only">
                     <label for="show-variance-only">Variance Only</label>
                 </div>
-                <div class="toggle-checkbox" id="uncounted-toggle" onclick="toggleUncountedFilter()">
+                <div class="toggle-checkbox uncounted-toggle" id="uncounted-toggle" onclick="toggleUncountedFilter()">
                     <input type="checkbox" id="show-uncounted-only">
                     <label for="show-uncounted-only">Show Uncounted</label>
                 </div>
