@@ -184,6 +184,34 @@
             margin-left: auto;
         }
 
+        .actions-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        }
+
+        .actions-group .btn,
+        .actions-group .file-input-wrapper {
+            margin-left: 0;
+        }
+
+        .actions-group .btn-save.toolbar-btn-export {
+            background: rgba(255, 170, 0, 0.18);
+            border-color: rgba(255, 170, 0, 0.45);
+            color: #ffcc66;
+            box-shadow: none;
+        }
+
+        .actions-group .btn-save.toolbar-btn-export:hover {
+            background: rgba(255, 170, 0, 0.28);
+            border-color: rgba(255, 170, 0, 0.65);
+            color: #ffe08a;
+        }
+
         .toolbar-row {
             display: flex;
             gap: 10px;
@@ -931,14 +959,16 @@
         <div class="toolbar">
             <!-- Row 1: Import / Export / No Count as Zero -->
             <div class="toolbar-row toolbar-row-actions">
-                <div class="file-input-wrapper">
-                    <button class="btn btn-load">Import Count</button>
-                    <input type="file" id="load-file-input" accept=".txt,.csv">
-                </div>
-                <button class="btn btn-save toolbar-btn-export" onclick="saveResults()">Export</button>
-                <div class="toggle-checkbox zero-toggle" id="zero-toggle" onclick="toggleZeroCount()">
-                    <input type="checkbox" id="treat-no-count-zero" checked>
-                    <label for="treat-no-count-zero">No Count as Zero</label>
+                <div class="actions-group">
+                    <div class="file-input-wrapper">
+                        <button class="btn btn-load">Import Count</button>
+                        <input type="file" id="load-file-input" accept=".txt,.csv">
+                    </div>
+                    <button class="btn btn-save toolbar-btn-export" onclick="saveResults()">Export</button>
+                    <div class="toggle-checkbox zero-toggle" id="zero-toggle" onclick="toggleZeroCount()">
+                        <input type="checkbox" id="treat-no-count-zero" checked>
+                        <label for="treat-no-count-zero">No Count as Zero</label>
+                    </div>
                 </div>
             </div>
             <!-- Row 2: Toggles + Refresh + Print -->
