@@ -100,24 +100,26 @@ async fn refresh_upc(
     }
 }
 
-/// GET /api/barcode-lookup?barcode=<Input>
-/// Query ItemBarcodes for matching barcodes and return all matched UPCs.
-/// Frontend falls back to using <Input> as UPC if no matches are returned.
+/// Barcode lookup: return all UPCs for a scanned barcode from ItemBarcodes.
+/// Query param: `barcode`
+/// Returns JSON: { "upcs": ["...", "..."] }
 async fn barcode_lookup(
     pool: web::Data<db::DbPool>,
     query: web::Query<db::BarcodeQuery>,
 ) -> HttpResponse {
-    let barcode = query.barcode.clone().unwrap_or_default();
+    let barcode = query.barcode.trim();
     if barcode.is_empty() {
         return HttpResponse::BadRequest().json(serde_json::json!({
             "error": "Missing barcode query parameter"
         }));
     }
 
-    match pool.barcode_lookup_upcs(&barcode).await {
-        Ok(upcs) => HttpResponse::Ok().json(db::BarcodeLookupResult { upcs }),
+    match pool.barcode_lookup_upcs(barcode).await {
+        Ok(upcs) => HttpResponse::Ok().json(serde_json::json!({
+            "upcs": upcs
+        })),
         Err(e) => {
-            eprintln!("Barcode lookup failed: {}", e);
+            eprintln!("Failed barcode lookup for {}: {}", barcode, e);
             HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": format!("Database error: {}", e)
             }))
