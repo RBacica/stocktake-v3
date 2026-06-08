@@ -666,9 +666,13 @@
             margin-bottom: 12px;
         }
 
-        .dialog-box p {
-            color: #aaa;
-            font-size: 0.9rem;
+        /* Prevent count inputs from triggering any ancestor form submit.
+           This stops page-reload/reset behaviour on Enter in count fields. */
+        .count-input,
+        .ticket-qty-input,
+        .toolbar-filter,
+        .lookup-input {
+            /* no submit-on-enter from toolbar forms */;
         }
         /* Print Count Sheet */
         .count-sheet-table {
@@ -937,8 +941,8 @@
                     <option value="ALL">All Suppliers</option>
                 </select>
             </div>
-            <button class="btn btn-reset" onclick="resetAll()">Reset</button>
-            <button class="btn btn-search" onclick="searchItems()">Search</button>
+            <button type="button" class="btn btn-reset" onclick="resetAll()">Reset</button>
+            <button type="button" class="btn btn-search" onclick="searchItems()">Search</button>
         </div>
 
         <!-- Toolbar -->
@@ -961,18 +965,18 @@
                     <input type="checkbox" id="show-uncounted-only">
                     <label for="show-uncounted-only">Uncounted</label>
                 </div>
-                <button class="btn btn-refresh" onclick="refreshAllItems()">Refresh All</button>
-                <button class="btn btn-print" onclick="printCountSheet()">Print Count Sheet</button>
+                <button type="button" class="btn btn-refresh" onclick="refreshAllItems()">Refresh All</button>
+                <button type="button" class="btn btn-print" onclick="printCountSheet()">Print Count Sheet</button>
             </div>
             <!-- Row 2: Filter + Import + Export -->
             <div class="toolbar-row">
                 <input type="text" id="lookup-input" placeholder="Filter by description..." oninput="onLookupChange()" class="toolbar-filter">
-                <button class="btn-clear-lookup" onclick="clearLookup()" title="Clear filter">✕</button>
+                <button type="button" class="btn-clear-lookup" onclick="clearLookup()" title="Clear filter">✕</button>
                 <div class="file-input-wrapper">
-                    <button class="btn btn-load">Import Count</button>
+                    <button type="button" class="btn btn-load">Import Count</button>
                     <input type="file" id="load-file-input" accept=".txt,.csv">
                 </div>
-                <button class="btn btn-save toolbar-btn-export" onclick="saveResults()">Export</button>
+                <button type="button" class="btn btn-save toolbar-btn-export" onclick="saveResults()">Export</button>
             </div>
             <!-- Row 3: Tracking Boxes -->
             <div class="toolbar-row toolbar-stats">
@@ -1097,11 +1101,19 @@
                     handleFileLoad(this);
                 });
             }
-            // Enter key in count inputs moves focus to next count input
+            // Enter key in number/text inputs inside the table/toolbar should
+            // never trigger a page reload or form submit. Count inputs advance
+            // to the next field; all other inputs just keep the default behavior
+            // without submitting.
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     const active = document.activeElement;
-                    if (active && active.classList.contains('count-input')) {
+                    if (!active) return;
+                    const isCountInput = active.classList.contains('count-input');
+                    const isInToolbar = !!active.closest('.toolbar');
+                    const isInTable = !!active.closest('table');
+
+                    if (isCountInput && isInTable) {
                         e.preventDefault();
                         const allCountInputs = Array.from(document.querySelectorAll('.count-input'));
                         const idx = allCountInputs.indexOf(active);
@@ -1110,6 +1122,11 @@
                             next.focus();
                             next.select();
                         }
+                        return;
+                    }
+
+                    if (isInToolbar || isInTable) {
+                        e.preventDefault();
                     }
                 }
             });
@@ -1384,9 +1401,14 @@
 
             if (html === '') {
                 // All rows filtered out
-                const msg = showTicketedOnly
-                    ? 'No items with tickets match the current filter.'
-                    : 'No items with variance match the current filter.';
+                let msg = 'No items match the current filter.';
+                if (showTicketedOnly && !showVarianceOnly && !showUncountedOnly) {
+                    msg = 'No items with tickets match the current filter.';
+                } else if (!showTicketedOnly && showVarianceOnly && !showUncountedOnly) {
+                    msg = 'No items with variance match the current filter.';
+                } else if (!showTicketedOnly && !showVarianceOnly && showUncountedOnly) {
+                    msg = 'No uncounted items match the current filter.';
+                }
                 tbody.innerHTML = `
                     <tr><td colspan="7">
                         <div class="empty-state">
