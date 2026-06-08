@@ -297,6 +297,48 @@
             min-width: 0;
         }
 
+        .barcode-mode-bar {
+            display: none;
+            gap: 8px;
+            align-items: center;
+        }
+        .barcode-mode-bar.open {
+            display: flex;
+        }
+        .barcode-input {
+            width: 260px;
+            height: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: #ffffff0f;
+            color: #e5e5e5;
+            padding: 0 14px;
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+        }
+        .barcode-status {
+            color: #b0c4b1;
+            font-size: 14px;
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .barcode-status.error {
+            color: #ff8f8f;
+        }
+        .btn-barcode-mode {
+            background: linear-gradient(135deg, #7c4dff, #651fff);
+            border: none;
+            color: #fff;
+        }
+        .btn-barcode-mode:hover {
+            filter: brightness(1.1);
+        }
+        .btn-barcode-mode.active {
+            outline: 2px solid #b388ff;
+        }
+
         .toggle-checkbox {
             display: flex;
             align-items: center;
@@ -1039,7 +1081,7 @@
                 </div>
             </div>
             <!-- Barcode scanning bar -->
-            <div class="barcode-mode-bar" id="barcode-mode-bar">
+            <div class="barcode-mode-bar" id="barcode-mode-bar" style="display:none;">
                 <input type="text" class="barcode-input" id="barcode-input" placeholder="Scan barcode..." autocomplete="off">
                 <span class="barcode-status" id="barcode-status"></span>
             </div>
@@ -1175,6 +1217,10 @@
                 });
             }
 
+            document.getElementById('barcode-input').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); resolveScannedBarcode(this.value.trim()); }
+            });
+            document.getElementById('barcode-input').addEventListener('input', function() { updatePromptText(); });
             // Enter-to-advance for count inputs
             document.getElementById('results-body').addEventListener('keydown', (e) => {
                 const input = e.target;
@@ -1855,16 +1901,14 @@
 
         function updatePromptText() {
             if (!barcodeMode) return;
-            if (document.getElementById('barcode-input')) promptText = document.getElementById('barcode-input').value.trim();
+            promptText = document.getElementById('barcode-input').value.trim();
         }
-
         function setBarcodeStatus(msg, isError) {
             const el = document.getElementById('barcode-status');
             if (!el) return;
             el.textContent = msg || '';
             el.className = 'barcode-status' + (isError ? ' error' : '');
         }
-
         function toggleBarcodeMode() {
             barcodeMode = !barcodeMode;
             const bar = document.getElementById('barcode-mode-bar');
@@ -1887,7 +1931,6 @@
                 pendingBarcodeUPCs = [];
             }
         }
-
         async function resolveScannedBarcode(value) {
             updatePromptText();
             const raw = value || promptText;
@@ -1907,23 +1950,8 @@
                 const upcs = Array.isArray(data.upcs) ? data.upcs : [];
                 let resolvedUpcs = upcs;
                 if (!resolvedUpcs.length) resolvedUpcs = [raw];
-                const visible = (candidate) => {
-                    for (const item of allItems) {
-                        if (item.upc !== candidate) continue;
-                        const isParent = childrenByParent[item.upc] && childrenByParent[item.upc].length > 0;
-                        const variance = isParent ? getParentCombinedVariance(item.upc) : getItemVariance(item.upc);
-                        const hasVar = Math.abs(variance) >= 0.05;
-                        const hideVariance = showVarianceOnly && !hasVar;
-                        const hideTicket = showTicketedOnly && !tickets.has(item.upc);
-                        const hideUncounted = showUncountedOnly && !isUncounted;
-                        const hideLookup = lookupFilter !== '' && !item.description.toLowerCase().includes(lookupFilter);
-                        if (hideVariance || hideTicket || hideUncounted || hideLookup) continue;
-                        return true;
-                    }
-                    return false;
-                };
                 for (const candidate of resolvedUpcs) {
-                    if (visible(candidate)) {
+                    if (await itemIsVisible(candidate)) {
                         await focusItemForBarcode(candidate);
                         return;
                     }
@@ -1942,7 +1970,21 @@
                 }
             }
         }
-
+        async function itemIsVisible(candidate) {
+            for (const item of allItems) {
+                if (item.upc !== candidate) continue;
+                const isParent = childrenByParent[item.upc] && childrenByParent[item.upc].length > 0;
+                const variance = isParent ? getParentCombinedVariance(item.upc) : getItemVariance(item.upc);
+                const hasVar = Math.abs(variance) >= 0.05;
+                const hideVariance = showVarianceOnly && !hasVar;
+                const hideTicket = showTicketedOnly && !tickets.has(item.upc);
+                const hideUncounted = showUncountedOnly && !isUncounted;
+                const hideLookup = lookupFilter !== '' && !item.description.toLowerCase().includes(lookupFilter);
+                if (hideVariance || hideTicket || hideUncounted || hideLookup) continue;
+                return true;
+            }
+            return false;
+        }
         async function focusItemForBarcode(upc) {
             const countInput = document.getElementById('count-' + upc);
             if (!countInput) {
@@ -1953,7 +1995,7 @@
             countInput.focus();
             countInput.select();
             setBarcodeStatus('Found: ' + upc);
-            const back = () => {
+            const moveFocusBack = () => {
                 if (document.getElementById('barcode-input')) {
                     document.getElementById('barcode-input').value = '';
                     promptText = '';
@@ -1961,12 +2003,12 @@
                 }
                 setBarcodeStatus('');
             };
-            countInput.addEventListener('change', back, { once: true });
+            countInput.addEventListener('change', moveFocusBack, { once: true });
             countInput.addEventListener('keydown', function h(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     countInput.removeEventListener('keydown', h);
-                    back();
+                    moveFocusBack();
                 }
             }, { once: true });
         }
