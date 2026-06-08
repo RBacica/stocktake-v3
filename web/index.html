@@ -169,19 +169,18 @@
             position: relative;
         }
 
-        .toolbar-row-actions {
-            justify-content: flex-end;
-            row-gap: 8px;
-            column-gap: 10px;
+        .toolbar-row-main-actions {
+            justify-content: space-between;
         }
 
-        .toolbar-row-actions .btn,
-        .toolbar-row-actions .file-input-wrapper {
-            margin-left: 8px;
+        .left-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .toolbar-row-actions .zero-toggle {
-            margin-left: auto;
+        .toolbar-row-toggles {
+            justify-content: flex-start;
         }
 
         .actions-group {
@@ -214,17 +213,17 @@
             margin-left: 0;
         }
 
-        .toolbar-row-actions .actions-group {
+        .toolbar-row-main-actions .actions-group {
             display: inline-flex;
             align-items: center;
             gap: 6px;
         }
 
-        .toolbar-row-actions .actions-group .file-input-wrapper {
+        .toolbar-row-main-actions .actions-group .file-input-wrapper {
             flex: 0 0 auto;
         }
 
-        .toolbar-row-actions .actions-group .actions-group-inner {
+        .toolbar-row-main-actions .actions-group .actions-group-inner {
             margin-left: 6px;
         }
 
@@ -1002,8 +1001,12 @@
 
         <!-- Toolbar -->
         <div class="toolbar">
-            <!-- Row 1: Import / Export / No Count as Zero -->
-            <div class="toolbar-row toolbar-row-actions">
+            <!-- Row 1: Print + Refresh (left) | Import / Export / No Count (right) -->
+            <div class="toolbar-row toolbar-row-main-actions">
+                <div class="left-actions">
+                    <button class="btn btn-print" onclick="printCountSheet()">Print</button>
+                    <button class="btn btn-refresh" onclick="refreshAllItems()">Refresh All</button>
+                </div>
                 <div class="actions-group">
                     <div class="file-input-wrapper">
                         <button class="btn btn-load">Import Count</button>
@@ -1018,10 +1021,20 @@
                     </div>
                 </div>
             </div>
-            <!-- Row 2: Print + Refresh (left side) -->
-            <div class="toolbar-row toolbar-row-print-refresh">
-                <button class="btn btn-print" onclick="printCountSheet()">Print</button>
-                <button class="btn btn-refresh" onclick="refreshAllItems()">Refresh All</button>
+            <!-- Row 2: Toggles -->
+            <div class="toolbar-row toolbar-row-toggles">
+                <div class="toggle-checkbox" id="variance-toggle" onclick="toggleVarianceFilter()">
+                    <input type="checkbox" id="show-variance-only">
+                    <label for="show-variance-only">Variance Only</label>
+                </div>
+                <div class="toggle-checkbox" id="uncounted-toggle" onclick="toggleUncountedFilter()">
+                    <input type="checkbox" id="show-uncounted-only">
+                    <label for="show-uncounted-only">Show Uncounted</label>
+                </div>
+                <div class="toggle-checkbox ticket-filter-toggle" id="ticket-filter-toggle" onclick="toggleTicketFilter()">
+                    <input type="checkbox" id="show-ticketed-only">
+                    <label for="show-ticketed-only">List Tickets</label>
+                </div>
             </div>
             <!-- Row 3: Filter -->
             <div class="toolbar-row">
