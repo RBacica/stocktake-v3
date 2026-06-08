@@ -235,9 +235,38 @@
             flex-wrap: wrap;
         }
 
+        .toolbar-row-print-refresh {
+            justify-content: flex-start;
+        }
+
         .toolbar-row .btn {
             flex: 0 0 auto;
             white-space: nowrap;
+        }
+
+        .btn-print {
+            background: rgba(76, 175, 255, 0.18);
+            border-color: rgba(76, 175, 255, 0.6);
+            color: #9ad4ff;
+            box-shadow: none;
+        }
+
+        .btn-print:hover {
+            background: rgba(76, 175, 255, 0.28);
+            border-color: rgba(76, 175, 255, 0.85);
+            color: #cceeff;
+        }
+
+        .btn-clear-lookup-danger {
+            border-color: rgba(239, 83, 80, 0.75);
+            color: #ef4444;
+            box-shadow: inset 0 0 0 1px rgba(239, 83, 80, 0.45);
+        }
+
+        .btn-clear-lookup-danger:hover {
+            background: rgba(239, 83, 80, 0.22);
+            border-color: rgba(239, 83, 80, 1);
+            color: #ff8a80;
         }
 
         .toolbar-filter {
@@ -989,27 +1018,15 @@
                     </div>
                 </div>
             </div>
-            <!-- Row 2: Toggles + Refresh + Print -->
-            <div class="toolbar-row">
-                <div class="toggle-checkbox" id="variance-toggle" onclick="toggleVarianceFilter()">
-                    <input type="checkbox" id="show-variance-only">
-                    <label for="show-variance-only">Show Variance</label>
-                </div>
-                <div class="toggle-checkbox" id="uncounted-toggle" onclick="toggleUncountedFilter()">
-                    <input type="checkbox" id="show-uncounted-only">
-                    <label for="show-uncounted-only">Uncounted</label>
-                </div>
-                <div class="toggle-checkbox ticket-filter-toggle" id="ticket-filter-toggle" onclick="toggleTicketFilter()">
-                    <input type="checkbox" id="show-ticketed-only">
-                    <label for="show-ticketed-only">List Tickets</label>
-                </div>
+            <!-- Row 2: Print + Refresh (left side) -->
+            <div class="toolbar-row toolbar-row-print-refresh">
+                <button class="btn btn-print" onclick="printCountSheet()">Print</button>
                 <button class="btn btn-refresh" onclick="refreshAllItems()">Refresh All</button>
-                <button class="btn btn-print" onclick="printCountSheet()">Print Count Sheet</button>
             </div>
             <!-- Row 3: Filter -->
             <div class="toolbar-row">
                 <input type="text" id="lookup-input" placeholder="Filter by description..." oninput="onLookupChange()" class="toolbar-filter">
-                <button class="btn-clear-lookup" onclick="clearLookup()" title="Clear filter">✕</button>
+                <button class="btn-clear-lookup btn-clear-lookup-danger" onclick="clearLookup()" title="Clear filter">✕</button>
             </div>
             <!-- Row 4: Tracking Boxes -->
             <div class="toolbar-row toolbar-stats">
