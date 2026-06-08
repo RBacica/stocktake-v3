@@ -78,57 +78,7 @@ pub struct Supplier {
     pub label: String,
 }
 
-/// The fixed Infinity Back Office departments. Used as a fallback so the
-/// dropdown is always populated with production-correct values, even before
-/// SQL Server is reachable. When the live DB returns its own distinct list,
-/// that takes precedence.
-/// The fixed Infinity Back Office departments as (id, name) pairs. The id is the
-/// value stored in Infinity's `Department` column and written to the saved CSV;
-/// the display label is "id name". Used as a fallback so the dropdown is always
-/// populated with production-correct values, even before SQL Server is reachable.
-/// When the live DB returns its own distinct list, that takes precedence.
-pub const FALLBACK_DEPARTMENTS: &[(&str, &str)] = &[
-    ("1", "Beer"),
-    ("55", "Cider"),
-    ("56", "Cigarettes/Tobacco"),
-    ("57", "Liqueur"),
-    ("58", "Miscellaneous"),
-    ("59", "Non Alcoholic Drinks"),
-    ("61", "Ready To Drink"),
-    ("62", "Snacks/Deli"),
-    ("63", "Spirits"),
-    ("64", "Wines"),
-];
-
-/// The known suppliers as (code, name) pairs. The code is the value matched
-/// against the SQL `Supplier` column and written to the saved CSV; the display
-/// label is "code name". Fallback list — the live DB wins when available.
-pub const FALLBACK_SUPPLIERS: &[(&str, &str)] = &[
-    ("001", "Tasman"),
-    ("31", "Asahi"),
-    ("32", "Lion"),
-    ("33", "Hancocks"),
-];
-
-fn fallback_departments() -> Vec<Department> {
-    FALLBACK_DEPARTMENTS
-        .iter()
-        .map(|(id, name)| Department {
-            department: id.to_string(),
-            label: format!("{} {}", id, name),
-        })
-        .collect()
-}
-
-fn fallback_suppliers() -> Vec<Supplier> {
-    FALLBACK_SUPPLIERS
-        .iter()
-        .map(|(code, name)| Supplier {
-            supplier: code.to_string(),
-            label: format!("{} {}", code, name),
-        })
-        .collect()
-}
+/// The fallback department/supplier lists have been removed.
 
 #[derive(Debug, Error)]
 pub enum DbError {
@@ -339,31 +289,14 @@ impl DbPool {
         Ok(results)
     }
 
-    /// Departments, preferring the live DB list but falling back to the fixed
-    /// Infinity list if the DB is unreachable or returns nothing. Always
-    /// returns a populated list so the UI dropdown is never empty.
+    /// Return the live DB department list, or an empty list if the DB is unreachable.
     pub async fn departments_or_fallback(&self) -> Vec<Department> {
-        match self.get_departments().await {
-            Ok(list) if !list.is_empty() => list,
-            Ok(_) => fallback_departments(),
-            Err(e) => {
-                eprintln!("get_departments failed ({e}); using fallback list");
-                fallback_departments()
-            }
-        }
+        self.get_departments().await.unwrap_or_default()
     }
 
-    /// Suppliers, preferring the live DB list but falling back to the four
-    /// known suppliers if the DB is unreachable or returns nothing.
+    /// Return the live DB supplier list, or an empty list if the DB is unreachable.
     pub async fn suppliers_or_fallback(&self) -> Vec<Supplier> {
-        match self.get_suppliers().await {
-            Ok(list) if !list.is_empty() => list,
-            Ok(_) => fallback_suppliers(),
-            Err(e) => {
-                eprintln!("get_suppliers failed ({e}); using fallback list");
-                fallback_suppliers()
-            }
-        }
+        self.get_suppliers().await.unwrap_or_default()
     }
 
     /// Fetch the latest StockOnHand for a single UPC.

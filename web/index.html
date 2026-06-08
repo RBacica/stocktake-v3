@@ -256,8 +256,96 @@
             accent-color: #ffaa00;
         }
 
+        .toggle-checkbox.uncounted-toggle:hover {
+            border-color: #44ccff;
+        }
+
+        .toggle-checkbox.uncounted-toggle.active {
+            background: #152530;
+            border-color: #44ccff;
+        }
+
+        .toggle-checkbox.uncounted-toggle input[type="checkbox"] {
+            accent-color: #44ccff;
+        }
+
         .toggle-checkbox.ticket-filter-toggle:hover {
             border-color: #cc77ff;
+        }
+
+        .toggle-checkbox.ticket-filter-toggle.active {
+            background: #1e1530;
+            border-color: #cc77ff;
+        }
+
+        .toggle-checkbox.ticket-filter-toggle input[type="checkbox"] {
+            accent-color: #cc77ff;
+        }
+
+        /* Mobile breakpoints */
+        @media screen and (max-width: 1024px) {
+            body {
+                padding: 12px;
+            }
+            .toolbar-filter {
+                max-width: 100%;
+            }
+            .stat-label {
+                letter-spacing: 0.5px;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .search-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .toolbar-row {
+                flex-wrap: wrap;
+            }
+            .stats-bar,
+            .toolbar-stats {
+                gap: 8px;
+            }
+            table,
+            thead,
+            tbody,
+            th,
+            td,
+            tr {
+                display: block;
+            }
+            thead {
+                display: none;
+            }
+            tbody tr {
+                border: 1px solid #0f3460;
+                border-radius: 10px;
+                margin-bottom: 12px;
+                padding: 8px 10px;
+                background: #16213e;
+            }
+            td {
+                border: none;
+                padding: 6px 2px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+            }
+            td:before {
+                content: attr(data-mobile-label);
+                font-weight: 600;
+                color: #aaa;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                font-size: 0.75rem;
+                flex: 0 0 auto;
+            }
+            .count-input {
+                width: 100%;
+                text-align: right;
+            }
         }
 
         .toggle-checkbox.ticket-filter-toggle.active {
@@ -802,7 +890,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>&#x1F4CB; Stock Take v2</h1>
+        <h1>&#x1F4CB; Stock Take v3</h1>
         <p class="subtitle">Search, count, and reconcile inventory</p>
 
         <!-- Search Panel -->
@@ -831,28 +919,35 @@
                     <input type="checkbox" id="show-variance-only">
                     <label for="show-variance-only">Show Variance</label>
                 </div>
+                <div class="toggle-checkbox" id="uncounted-toggle" onclick="toggleUncountedFilter()">
+                    <input type="checkbox" id="show-uncounted-only">
+                    <label for="show-uncounted-only">Uncounted</label>
+                </div>
                 <div class="toggle-checkbox ticket-filter-toggle" id="ticket-filter-toggle" onclick="toggleTicketFilter()">
                     <input type="checkbox" id="show-ticketed-only">
                     <label for="show-ticketed-only">List Tickets</label>
                 </div>
+                <button class="btn btn-refresh" onclick="refreshAllItems()">Refresh All</button>
+                <button class="btn btn-print" onclick="printCountSheet()">Print Count Sheet</button>
+            </div>
+            <!-- Row 2: Filter -->
+            <div class="toolbar-row">
+                <input type="text" id="lookup-input" placeholder="Filter by description..." oninput="onLookupChange()" class="toolbar-filter">
+                <button class="btn-clear-lookup" onclick="clearLookup()" title="Clear filter">✕</button>
                 <div class="toggle-checkbox zero-toggle" id="zero-toggle" onclick="toggleZeroCount()">
                     <input type="checkbox" id="treat-no-count-zero" checked>
                     <label for="treat-no-count-zero">No Count as Zero</label>
                 </div>
-                <button class="btn btn-refresh" onclick="refreshAllItems()">Refresh All</button>
-                <button class="btn btn-print" onclick="printCountSheet()">Print Count Sheet</button>
             </div>
-            <!-- Row 2: Filter + Import + Export -->
+            <!-- Row 3: Import + Export -->
             <div class="toolbar-row">
-                <input type="text" id="lookup-input" placeholder="Filter by description..." oninput="onLookupChange()" class="toolbar-filter">
-                <button class="btn-clear-lookup" onclick="clearLookup()" title="Clear filter">✕</button>
                 <div class="file-input-wrapper">
                     <button class="btn btn-load">Import Count</button>
                     <input type="file" id="load-file-input" accept=".txt,.csv">
                 </div>
                 <button class="btn btn-save toolbar-btn-export" onclick="saveResults()">Export</button>
             </div>
-            <!-- Row 3: Tracking Boxes -->
+            <!-- Row 4: Tracking Boxes -->
             <div class="toolbar-row toolbar-stats">
                 <div class="stat">
                     <div class="stat-value" id="stat-total">0</div>
@@ -929,6 +1024,7 @@
         // State
         let allItems = [];
         let showVarianceOnly = false;
+        let showUncountedOnly = false;
         let showTicketedOnly = false;
         let treatNoCountAsZero = true;
         // counts[upc] = string entered by the user. Lives in JS state so it
@@ -974,6 +1070,21 @@
                     handleFileLoad(this);
                 });
             }
+
+            // Enter-to-advance for count inputs
+            document.getElementById('results-body').addEventListener('keydown', (e) => {
+                const input = e.target;
+                if (!input.classList.contains('count-input')) return;
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                const inputs = Array.from(document.querySelectorAll('.count-input'));
+                const idx = inputs.indexOf(input);
+                const next = inputs[idx + 1];
+                if (next) {
+                    next.focus();
+                    next.select();
+                }
+            });
         });
 
         // ─────────────────────────────────────
@@ -1158,6 +1269,9 @@
                 // hasVar: ignore anything within ±0.05 — fractional noise from SellingQty
                 // rounding (e.g. 0.33 vs 0.34) should not trigger a highlight
                 const hasVar = Math.abs(variance) >= 0.05;
+                const hasCount = countStr !== '' && countStr !== undefined;
+                const countNum = hasCount ? parseFloat(countStr) || 0 : null;
+                const isUncounted = !hasCount || isNaN(countNum);
                 // Display: 2dp, but when fractional part >= 0.95, round up to whole
                 // e.g. 0.66→"0.66", 0.99→"1", 1.34→"1.34", 2.97→"3"
                 const displayVal = (Math.abs(variance) % 1 >= 0.95) ? Math.round(variance) : parseFloat(variance.toFixed(2));
@@ -1168,8 +1282,9 @@
                 // Determine if row should be hidden by filters
                 const hideVariance = showVarianceOnly && !hasVar;
                 const hideTicket = showTicketedOnly && !tickets.has(item.upc);
+                const hideUncounted = showUncountedOnly && !isUncounted;
                 const hideLookup = lookupFilter !== '' && !item.description.toLowerCase().includes(lookupFilter);
-                if (hideVariance || hideTicket || hideLookup) return;
+                if (hideVariance || hideTicket || hideUncounted || hideLookup) return;
 
                 visibleIdx++;
 
@@ -1583,6 +1698,24 @@
         });
 
         // ─────────────────────────────────────
+        //  Uncounted Filter Toggle
+        // ─────────────────────────────────────
+        function toggleUncountedFilter() {
+            showUncountedOnly = !showUncountedOnly;
+            const cb = document.getElementById('show-uncounted-only');
+            const toggle = document.getElementById('uncounted-toggle');
+            cb.checked = showUncountedOnly;
+            toggle.classList.toggle('active', showUncountedOnly);
+            renderTable();
+        }
+
+        document.getElementById('show-uncounted-only').addEventListener('change', function() {
+            showUncountedOnly = this.checked;
+            document.getElementById('uncounted-toggle').classList.toggle('active', this.checked);
+            renderTable();
+        });
+
+        // ─────────────────────────────────────
         //  Show-Ticketed-Only Filter Toggle
         // ─────────────────────────────────────
         function toggleTicketFilter() {
@@ -1805,8 +1938,9 @@
 
                 const hideVariance = showVarianceOnly && !hasVar;
                 const hideTicket = showTicketedOnly && !tickets.has(item.upc);
+                const hideUncounted = showUncountedOnly && !isUncounted;
                 const hideLookup = lookupFilter !== '' && !item.description.toLowerCase().includes(lookupFilter);
-                if (hideVariance || hideTicket || hideLookup) return;
+                if (hideVariance || hideTicket || hideUncounted || hideLookup) return;
 
                 const v = counts[item.upc];
                 if (v != null && v !== '') hasAnyCount = true;
