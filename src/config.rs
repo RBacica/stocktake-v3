@@ -123,8 +123,4 @@ fn try_load_legacy() -> Result<AppConfig, io::Error> {
     })
 }
 
-/// Write a default config file if none exists.
-pub fn init_config() -> io::Result<()> {
-    let example = include_str!("../config.toml.example");
-    std::fs::write("config.toml", example)
-}
+
