@@ -333,7 +333,7 @@ impl DbPool {
     /// Look up all UPCs bound to the provided barcode in `ItemBarcodes`.
     pub async fn barcode_lookup_upcs(&self, barcode: &str) -> Result<Vec<String>, DbError> {
         let mut conn = self.pool.get().await.map_err(|e| DbError::Connection(e.to_string()))?;
-        let safe_barcode = barcode.replace(''', "''");
+        let safe_barcode = barcode.replace("'", "''");
         let query = format!("SELECT UPC FROM ItemBarcodes WHERE barcode = '{}'", safe_barcode);
         let mut stream = conn.query(&query, &[])
             .await
