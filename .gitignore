@@ -1,0 +1,12 @@
+# Build artifacts
+target/
+dist/
+.cargo/
+
+# Runtime/config
+config.toml
+
+# Frontend build/cache
+web/favicon.ico
+web/icon.png
+web/icon.svg
