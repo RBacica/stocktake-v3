@@ -1037,16 +1037,16 @@
                     <option value="ALL">All Departments</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label for="supplier-select">Supplier</label>
-                <select id="supplier-select">
-                    <option value="ALL">All Suppliers</option>
-                </select>
-            </div>
             <div class="form-group" id="sub-dep-group" style="display:none;">
                 <label for="sub-dep-select">Sub-Department</label>
                 <select id="sub-dep-select">
                     <option value="ALL">All Sub-Departments</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="supplier-select">Supplier</label>
+                <select id="supplier-select">
+                    <option value="ALL">All Suppliers</option>
                 </select>
             </div>
             <button class="btn btn-reset" onclick="resetAll()">Reset</button>
@@ -1273,7 +1273,8 @@
         async function loadSubDepartments(dept) {
             const subGroup = document.getElementById('sub-dep-group');
             const subSel = document.getElementById('sub-dep-select');
-            if (!dept || dept === 'ALL') {
+            const deptLabel = document.getElementById('department-select').options[document.getElementById('department-select').selectedIndex].text;
+            if (!dept || dept === 'ALL' || !deptLabel.startsWith('Spirits')) {
                 subGroup.style.display = 'none';
                 subSel.innerHTML = '<option value="ALL">All Sub-Departments</option>';
                 return;
