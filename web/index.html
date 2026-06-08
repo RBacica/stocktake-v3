@@ -298,12 +298,18 @@
         }
 
         .barcode-mode-bar {
-            display: none;
             gap: 8px;
             align-items: center;
+            visibility: hidden;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.15s ease, opacity 0.15s ease, visibility 0.15s ease;
         }
         .barcode-mode-bar.open {
-            display: flex;
+            visibility: visible;
+            opacity: 1;
+            max-height: 80px;
         }
         .barcode-input {
             width: 260px;
