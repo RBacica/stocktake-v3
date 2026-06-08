@@ -1,0 +1,2105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Take v2</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+            overscroll-behavior-y: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            margin-bottom: 8px;
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+        }
+
+        .search-panel {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-end;
+            border: 1px solid #0f3460;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 180px;
+            flex: 1;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .form-group select {
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #0f3460;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .form-group select:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-search {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #000;
+        }
+
+        .btn-search:hover {
+            background: linear-gradient(135deg, #00e5ff, #00aadd);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #00cc88, #00aa66);
+            color: #000;
+        }
+
+        .btn-save:hover {
+            background: linear-gradient(135deg, #00dd99, #00bb77);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(204, 136, 0, 0.3);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #666, #555);
+            color: #fff;
+        }
+
+        .btn-reset:hover {
+            background: linear-gradient(135deg, #777, #666);
+            transform: translateY(-1px);
+        }
+
+        .btn-refresh {
+            background: linear-gradient(135deg, #ffaa00, #cc8800);
+            color: #000;
+        }
+
+        .btn-refresh:hover {
+            background: linear-gradient(135deg, #ffbb33, #dd9900);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 170, 0, 0.3);
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #3a7bd5, #2d5aa3);
+            color: #fff;
+        }
+
+        .btn-print:hover {
+            background: linear-gradient(135deg, #4a8be5, #3d6ab3);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(58, 123, 213, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .toolbar-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-row .btn {
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
+        .toolbar-filter {
+            flex: 1;
+            min-width: 180px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid #0f3460;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .toolbar-filter:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+
+        .toolbar-row .toolbar-btn-export {
+            flex: 0 0 auto;
+        }
+
+        .toolbar-stats {
+            gap: 6px;
+        }
+
+        .toolbar-stats .stat {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .toggle-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #16213e;
+            border-radius: 8px;
+            border: 1px solid #0f3460;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-checkbox:hover {
+            border-color: #ff6b6b;
+        }
+
+        .toggle-checkbox.active {
+            background: #2d1520;
+            border-color: #ff6b6b;
+        }
+
+        .toggle-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #ff6b6b;
+        }
+
+        .toggle-checkbox label {
+            font-size: 0.85rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .toggle-checkbox.zero-toggle:hover {
+            border-color: #ffaa00;
+        }
+
+        .toggle-checkbox.zero-toggle.active {
+            background: #2d2a15;
+            border-color: #ffaa00;
+        }
+
+        .toggle-checkbox.zero-toggle input[type="checkbox"] {
+            accent-color: #ffaa00;
+        }
+
+        .toggle-checkbox.ticket-filter-toggle:hover {
+            border-color: #cc77ff;
+        }
+
+        .toggle-checkbox.ticket-filter-toggle.active {
+            background: #1e1530;
+            border-color: #cc77ff;
+        }
+
+        .toggle-checkbox.ticket-filter-toggle input[type="checkbox"] {
+            accent-color: #cc77ff;
+        }
+
+        .btn-clear-lookup {
+            padding: 8px 14px;
+            border: 1px solid #555;
+            border-radius: 8px;
+            background: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .btn-clear-lookup:hover {
+            color: #fff;
+            border-color: #fff;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid #0f3460;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #0f3460, #16213e);
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #00d4ff;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 10px 16px;
+            border-top: 1px solid #0f3460;
+            font-size: 0.9rem;
+        }
+
+        tbody tr:hover {
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        tbody tr.has-variance {
+            background: rgba(255, 107, 107, 0.08);
+        }
+
+        tbody tr.has-variance:hover {
+            background: rgba(255, 107, 107, 0.12);
+        }
+
+        .upc {
+            font-family: 'Courier New', monospace;
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        .description {
+            max-width: 350px;
+        }
+
+        .count-input {
+            width: 100px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #0f3460;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-size: 0.95rem;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+
+        .count-input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+        }
+
+        .variance {
+            font-weight: 700;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        .variance.positive {
+            color: #00cc88;
+        }
+
+        .variance.negative {
+            color: #ff6b6b;
+        }
+
+        .variance.zero {
+            color: #888;
+        }
+
+        .stock-on-hand {
+            text-align: center;
+            font-weight: 600;
+            color: #ccc;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #00d4ff;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(0, 212, 255, 0.2);
+            border-top-color: #00d4ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-msg {
+            background: #2d1520;
+            border: 1px solid #ff6b6b;
+            color: #ff6b6b;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .stat {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 10px 18px;
+            border: 1px solid #0f3460;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #00d4ff;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .count-input.highlight {
+            border-color: #ffaa00;
+            background: #2d2a15;
+        }
+
+        /* Ticket indicator in row */
+        .ticket-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #cc77ff;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+
+        /* Action buttons per row */
+        .action-group {
+            display: flex;
+            gap: 4px;
+            flex-wrap: nowrap;
+        }
+
+        .action-btn {
+            background: none;
+            border: 1px solid #555;
+            color: #aaa;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.72rem;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .action-btn:hover {
+            color: #fff;
+            border-color: #fff;
+        }
+
+        .action-btn.refresh-btn:hover {
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+
+        .action-btn.clear-btn:hover {
+            border-color: #ffaa00;
+            color: #ffaa00;
+        }
+
+        .action-btn.ticket-btn:hover {
+            border-color: #cc77ff;
+            color: #cc77ff;
+        }
+
+        .action-btn.ticket-btn.active {
+            background: #cc77ff;
+            border-color: #cc77ff;
+            color: #fff;
+        }
+
+        .action-btn.ticket-btn.active:hover {
+            background: #dd88ff;
+            border-color: #dd88ff;
+        }
+
+        .ticket-qty-input {
+            width: 52px;
+            padding: 4px 6px;
+            border-radius: 6px;
+            border: 1px solid #cc77ff;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-size: 0.75rem;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+
+        .ticket-qty-input:focus {
+            outline: none;
+            border-color: #dd88ff;
+            box-shadow: 0 0 6px rgba(204, 119, 255, 0.3);
+        }
+
+        /* Child row styling */
+        tr.child-row td {
+            background: rgba(255, 255, 255, 0.02);
+            font-size: 0.82rem;
+            padding: 6px 16px;
+        }
+
+        tr.child-row td:first-child {
+            padding-left: 36px;
+        }
+
+        tr.child-row .description {
+            color: #aaa;
+        }
+
+        tr.child-row td.child-indent::before {
+            content: "├─ ";
+            color: #555;
+        }
+
+        .parent-row + .child-row td {
+            border-top: none;
+        }
+
+        tr.child-row:last-of-type td {
+            border-bottom: 1px solid rgba(15, 52, 96, 0.5);
+        }
+
+        .combined-variance-note {
+            font-size: 0.65rem;
+            color: #888;
+            font-weight: 400;
+            margin-left: 4px;
+        }
+
+        /* File input for loading count file */
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            font-size: 0;
+        }
+
+        .btn-load {
+            background: linear-gradient(135deg, #cc77ff, #9944cc);
+            color: #fff;
+            pointer-events: none;
+        }
+
+        .btn-load:hover {
+            background: linear-gradient(135deg, #dd88ff, #aa55dd);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(204, 119, 255, 0.3);
+        }
+
+        /* Mask overlay for loading state */
+        .table-mask {
+            position: absolute;
+            inset: 0;
+            background: rgba(26, 26, 46, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            border-radius: 12px;
+        }
+
+        /* Dialog overlay */
+        .dialog-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .dialog-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .dialog-box {
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 16px;
+            padding: 32px 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            min-width: 400px;
+        }
+
+        .dialog-box h2 {
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+        }
+
+        .dialog-box .spinner-large {
+            display: inline-block;
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(0, 212, 255, 0.2);
+            border-top-color: #00d4ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        .dialog-box p {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        /* Print Count Sheet */
+        .count-sheet-table {
+            display: none;
+        }
+
+        /* Mobile / Tablet optimizations */
+        @media (max-width: 1024px) {
+            .search-panel {
+                gap: 12px;
+            }
+            .form-group {
+                min-width: 140px;
+            }
+            .toolbar-row {
+                gap: 6px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+            h1 {
+                font-size: 1.4rem;
+            }
+            .search-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .form-group {
+                width: 100%;
+                min-width: unset;
+            }
+            .toolbar-row {
+                flex-wrap: wrap;
+                justify-content: flex-start;
+            }
+            .btn {
+                width: 100%;
+            }
+            table,
+            thead,
+            tbody,
+            th,
+            td,
+            tr {
+                display: block;
+            }
+            thead {
+                display: none;
+            }
+            tbody tr {
+                margin: 0 0 12px;
+                border: 1px solid #0f3460;
+                border-radius: 8px;
+                background: #111827;
+                padding: 8px 10px;
+            }
+            tbody tr.parent-row {
+                background: #111827;
+            }
+            tbody tr.child-row {
+                background: #0f1322;
+            }
+            tbody tr.has-variance {
+                background: rgba(255, 107, 107, 0.08);
+            }
+            td {
+                border: none;
+                padding: 6px 4px;
+                position: relative;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 8px;
+            }
+            td::before {
+                content: attr(data-mobile-label);
+                font-weight: 600;
+                color: #9ca3af;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                font-size: 0.72rem;
+                flex-shrink: 0;
+            }
+            td:empty,
+            td:first-child {
+                display: none;
+            }
+            .upc,
+            .description {
+                max-width: unset;
+            }
+            .count-input {
+                width: 100%;
+                text-align: right;
+            }
+            .action-group {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .ticket-qty-input {
+                width: 100%;
+            }
+        }
+
+        @media print {
+            /* Hide everything except the count sheet */
+            body {
+                background: #fff !important;
+                color: #000 !important;
+                padding: 10px !important;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+            }
+
+            .container {
+                max-width: 100% !important;
+            }
+
+            h1 {
+                color: #000 !important;
+                font-size: 1.4rem !important;
+            }
+
+            .subtitle,
+            .search-panel,
+            .toolbar,
+            .table-wrapper,
+            .dialog-overlay,
+            .btn-print {
+                display: none !important;
+            }
+
+            /* Show the count sheet table */
+            .count-sheet-table {
+                display: table !important;
+                width: 100% !important;
+                border-collapse: collapse !important;
+                font-size: 0.75rem !important;
+                page-break-inside: auto;
+            }
+
+            .count-sheet-table thead {
+                display: table-header-group !important;
+            }
+
+            .count-sheet-table thead tr {
+                background: #eee !important;
+            }
+
+            .count-sheet-table th {
+                color: #000 !important;
+                padding: 6px 8px !important;
+                border: 1px solid #999 !important;
+                font-size: 0.7rem !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.5px !important;
+                text-align: left !important;
+            }
+
+            .count-sheet-table td {
+                padding: 5px 8px !important;
+                border: 1px solid #ccc !important;
+                color: #000 !important;
+                font-size: 0.72rem !important;
+                page-break-inside: avoid;
+            }
+
+            .count-sheet-table .upc {
+                font-family: 'Courier New', monospace !important;
+                color: #000 !important;
+                font-weight: 600 !important;
+            }
+
+            .count-sheet-table .description {
+                max-width: 280px !important;
+            }
+
+            .count-sheet-table .stock-on-hand {
+                text-align: center !important;
+                font-weight: 600 !important;
+            }
+
+            .count-sheet-table .count-box {
+                width: 60px !important;
+                height: 24px !important;
+                border: 1px solid #999 !important;
+                background: none !important;
+            }
+
+            .count-sheet-table .count-val {
+                text-align: center !important;
+                font-weight: 700 !important;
+                font-family: 'Courier New', monospace !important;
+            }
+
+            .count-sheet-table .variance-cell {
+                text-align: center !important;
+                font-weight: 700 !important;
+                font-family: 'Courier New', monospace !important;
+            }
+
+            .count-sheet-table .var-negative {
+                color: #c00 !important;
+            }
+
+            .count-sheet-table .var-positive {
+                color: #080 !important;
+            }
+
+            .count-sheet-table .ticket-cell {
+                text-align: center !important;
+                width: 30px !important;
+            }
+
+            .count-sheet-table .ticket-cell input[type="checkbox"] {
+                width: 14px !important;
+                height: 14px !important;
+                accent-color: #333 !important;
+                -webkit-appearance: checkbox !important;
+                appearance: checkbox !important;
+            }
+
+            .count-sheet-table .parent-row td {
+                font-weight: 600 !important;
+            }
+
+            .count-sheet-table .child-row td {
+                font-size: 0.68rem !important;
+                color: #333 !important;
+            }
+
+            .count-sheet-table .child-row td:first-child {
+                padding-left: 20px !important;
+            }
+
+            .count-sheet-table .indent-marker {
+                color: #888 !important;
+                margin-right: 4px !important;
+            }
+
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>&#x1F4CB; Stock Take v2</h1>
+        <p class="subtitle">Search, count, and reconcile inventory</p>
+
+        <!-- Search Panel -->
+        <div class="search-panel">
+            <div class="form-group">
+                <label for="department-select">Department</label>
+                <select id="department-select" onchange="onDepartmentChange()">
+                    <option value="ALL">All Departments</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="supplier-select">Supplier</label>
+                <select id="supplier-select">
+                    <option value="ALL">All Suppliers</option>
+                </select>
+            </div>
+            <button class="btn btn-reset" onclick="resetAll()">Reset</button>
+            <button class="btn btn-search" onclick="searchItems()">Search</button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <!-- Row 1: Toggles + Refresh + Print -->
+            <div class="toolbar-row">
+                <div class="toggle-checkbox" id="variance-toggle" onclick="toggleVarianceFilter()">
+                    <input type="checkbox" id="show-variance-only">
+                    <label for="show-variance-only">Show Variance</label>
+                </div>
+                <div class="toggle-checkbox ticket-filter-toggle" id="ticket-filter-toggle" onclick="toggleTicketFilter()">
+                    <input type="checkbox" id="show-ticketed-only">
+                    <label for="show-ticketed-only">List Tickets</label>
+                </div>
+                <div class="toggle-checkbox zero-toggle" id="zero-toggle" onclick="toggleZeroCount()">
+                    <input type="checkbox" id="treat-no-count-zero" checked>
+                    <label for="treat-no-count-zero">No Count as Zero</label>
+                </div>
+                <button class="btn btn-refresh" onclick="refreshAllItems()">Refresh All</button>
+                <button class="btn btn-print" onclick="printCountSheet()">Print Count Sheet</button>
+            </div>
+            <!-- Row 2: Filter + Import + Export -->
+            <div class="toolbar-row">
+                <input type="text" id="lookup-input" placeholder="Filter by description..." oninput="onLookupChange()" class="toolbar-filter">
+                <button class="btn-clear-lookup" onclick="clearLookup()" title="Clear filter">✕</button>
+                <div class="file-input-wrapper">
+                    <button class="btn btn-load">Import Count</button>
+                    <input type="file" id="load-file-input" accept=".txt,.csv">
+                </div>
+                <button class="btn btn-save toolbar-btn-export" onclick="saveResults()">Export</button>
+            </div>
+            <!-- Row 3: Tracking Boxes -->
+            <div class="toolbar-row toolbar-stats">
+                <div class="stat">
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="stat-counted">0</div>
+                    <div class="stat-label">Counted</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="stat-uncounted">0</div>
+                    <div class="stat-label">Uncounted</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="stat-variance">0</div>
+                    <div class="stat-label">Variance</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="stat-tickets">0</div>
+                    <div class="stat-label">Tickets</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        <div class="table-wrapper">
+            <div class="table-mask" id="table-mask" style="display:none">
+                <div class="spinner"></div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th data-mobile-label="#">#</th>
+                        <th data-mobile-label="UPC">UPC</th>
+                        <th data-mobile-label="Description">Description</th>
+                        <th data-mobile-label="Stock On Hand">Stock On Hand</th>
+                        <th data-mobile-label="Count">Count</th>
+                        <th data-mobile-label="Variance">Variance</th>
+                        <th data-mobile-label="Actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="results-body">
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <div class="icon">&#x1F50D;</div>
+                                <p>Select a department and/or supplier, then click Search</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div><!-- end table-wrapper -->
+
+        <!-- Print Count Sheet Table (hidden on screen, shown only when printing) -->
+        <table class="count-sheet-table" id="count-sheet-table">
+            <thead id="count-sheet-head">
+            </thead>
+            <tbody id="count-sheet-body">
+            </tbody>
+        </table>
+    </div><!-- end .container -->
+
+    <!-- Loading Dialog -->
+    <div class="dialog-overlay" id="loading-dialog">
+        <div class="dialog-box">
+            <div class="spinner-large"></div>
+            <h2 id="loading-dialog-title">Loading...</h2>
+            <p id="loading-dialog-msg">Please wait</p>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let allItems = [];
+        let showVarianceOnly = false;
+        let showTicketedOnly = false;
+        let treatNoCountAsZero = true;
+        // counts[upc] = string entered by the user. Lives in JS state so it
+        // survives full table re-renders (variance filter, refresh, clear).
+        let counts = {};
+        // Set of UPCs that have a ticket
+        let tickets = new Set();
+        // ticketQtys[upc] = number of tickets (default 1)
+        let ticketQtys = {};
+        // Remember the filter used for the last search so Refresh can reuse it.
+        let lastFilter = { dept: 'ALL', sup: 'ALL' };
+        // All suppliers list (for restoring when dept = ALL)
+        let allSuppliers = [];
+        // Parent-child relationship maps (built after each search)
+        let childrenByParent = {};  // parent_upc -> [childItem, ...]
+        let childUpcs = new Set();  // Set of UPCs that are children
+        // Lookup filter: description search term (empty = no filter)
+        let lookupFilter = '';
+
+        // ─────────────────────────────────────
+        //  Dialog helpers
+        // ─────────────────────────────────────
+        function showDialog(title, msg) {
+            document.getElementById('loading-dialog-title').textContent = title;
+            document.getElementById('loading-dialog-msg').textContent = msg || '';
+            document.getElementById('loading-dialog').classList.add('open');
+        }
+
+        function hideDialog() {
+            document.getElementById('loading-dialog').classList.remove('open');
+        }
+
+        // ─────────────────────────────────────
+        //  Initialization
+        // ─────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDepartments();
+            loadSuppliers();
+            // Wire up the file input listener
+            const fileInput = document.getElementById('load-file-input');
+            if (fileInput) {
+                fileInput.addEventListener('change', function() {
+                    handleFileLoad(this);
+                });
+            }
+            // Enter key in count inputs moves focus to next count input
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const active = document.activeElement;
+                    if (active && active.classList.contains('count-input')) {
+                        e.preventDefault();
+                        const allCountInputs = Array.from(document.querySelectorAll('.count-input'));
+                        const idx = allCountInputs.indexOf(active);
+                        if (idx >= 0 && idx < allCountInputs.length - 1) {
+                            const next = allCountInputs[idx + 1];
+                            next.focus();
+                            next.select();
+                        }
+                    }
+                }
+            });
+        });
+
+        // ─────────────────────────────────────
+        //  Department change → filter suppliers
+        // ─────────────────────────────────────
+        async function onDepartmentChange() {
+            const dept = document.getElementById('department-select').value;
+            await loadSuppliersForDepartment(dept);
+        }
+
+        async function loadSuppliersForDepartment(dept) {
+            try {
+                let url = '/api/suppliers-for-dept';
+                if (dept && dept !== 'ALL') {
+                    url += `?department=${encodeURIComponent(dept)}`;
+                }
+                const resp = await fetch(url);
+                const sups = await resp.json();
+                const sel = document.getElementById('supplier-select');
+                // Preserve current selection if still valid
+                const currentVal = sel.value;
+                sel.innerHTML = '<option value="ALL">All Suppliers</option>';
+                sups.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.supplier;
+                    opt.textContent = s.label || s.supplier;
+                    sel.appendChild(opt);
+                });
+                // Restore selection if still in list
+                if (currentVal && currentVal !== 'ALL') {
+                    const stillExists = Array.from(sel.options).some(o => o.value === currentVal);
+                    if (stillExists) sel.value = currentVal;
+                }
+                // When dept = ALL, cache the full list
+                if (!dept || dept === 'ALL') {
+                    allSuppliers = sups;
+                }
+            } catch (e) {
+                console.error('Failed to load suppliers for department:', e);
+            }
+        }
+
+        // ─────────────────────────────────────
+        //  Load dropdown options
+        // ─────────────────────────────────────
+        async function loadDepartments() {
+            try {
+                const resp = await fetch('/api/departments');
+                const depts = await resp.json();
+                const sel = document.getElementById('department-select');
+                depts.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.department;
+                    opt.textContent = d.label || d.department;
+                    sel.appendChild(opt);
+                });
+            } catch (e) {
+                console.error('Failed to load departments:', e);
+            }
+        }
+
+        async function loadSuppliers() {
+            try {
+                const resp = await fetch('/api/suppliers');
+                const sups = await resp.json();
+                allSuppliers = sups;
+                const sel = document.getElementById('supplier-select');
+                sups.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.supplier;
+                    opt.textContent = s.label || s.supplier;
+                    sel.appendChild(opt);
+                });
+            } catch (e) {
+                console.error('Failed to load suppliers:', e);
+            }
+        }
+
+        // ─────────────────────────────────────
+        //  Search
+        // ─────────────────────────────────────
+        async function searchItems() {
+            const dept = document.getElementById('department-select').value;
+            const sup = document.getElementById('supplier-select').value;
+
+            let url = '/api/search?';
+            if (dept !== 'ALL') url += `department=${encodeURIComponent(dept)}&`;
+            if (sup !== 'ALL') url += `supplier=${encodeURIComponent(sup)}&`;
+
+            // Remember this filter so Refresh can re-run the same query.
+            lastFilter = { dept, sup };
+            // A fresh search starts a new count session — clear prior counts.
+            counts = {};
+            tickets = new Set();
+            ticketQtys = {};
+            childrenByParent = {};
+            childUpcs = new Set();
+
+            showVarianceOnly = false;
+            document.getElementById('show-variance-only').checked = false;
+            document.getElementById('variance-toggle').classList.remove('active');
+
+            showTicketedOnly = false;
+            document.getElementById('show-ticketed-only').checked = false;
+            document.getElementById('ticket-filter-toggle').classList.remove('active');
+
+            // Show loading
+            document.getElementById('results-body').innerHTML = `
+                <tr><td colspan="7">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p style="margin-top:12px">Loading items...</p>
+                    </div>
+                </td></tr>`;
+
+            try {
+                const resp = await fetch(url);
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    throw new Error(err.error || `HTTP ${resp.status}`);
+                }
+                allItems = await resp.json();
+                buildParentChildMap(allItems);
+                renderTable();
+            } catch (e) {
+                document.getElementById('results-body').innerHTML = `
+                    <tr><td colspan="7">
+                        <div class="error-msg">Error: ${e.message}</div>
+                    </td></tr>`;
+            }
+        }
+
+        // ─────────────────────────────────────
+        //  Parent-child relationship builder
+        // ─────────────────────────────────────
+        function buildParentChildMap(items) {
+            childrenByParent = {};
+            childUpcs = new Set();
+            items.forEach(item => {
+                if (item.parent_upc && item.parent_upc.trim() !== '') {
+                    const parentUpc = item.parent_upc.trim();
+                    if (!childrenByParent[parentUpc]) {
+                        childrenByParent[parentUpc] = [];
+                    }
+                    childrenByParent[parentUpc].push(item);
+                    childUpcs.add(item.upc);
+                }
+            });
+        }
+
+        // ─────────────────────────────────────
+        //  Render Table
+        // ─────────────────────────────────────
+        function renderTable() {
+            const tbody = document.getElementById('results-body');
+
+            if (allItems.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="7">
+                        <div class="empty-state">
+                            <div class="icon">&#x1F914;</div>
+                            <p>No items found for the selected criteria.</p>
+                        </div>
+                    </td></tr>`;
+                updateStats(0, 0, 0, 0, 0);
+                return;
+            }
+
+            let html = '';
+            let visibleIdx = 0;
+
+            // Only iterate top-level items (not children)
+            allItems.forEach((item, i) => {
+                // Skip child items — they render under their parent
+                if (childUpcs.has(item.upc)) return;
+
+                const isParent = childrenByParent[item.upc] && childrenByParent[item.upc].length > 0;
+                // For parent items (those with children), show combined variance
+                // For regular items, show normal variance
+                const variance = isParent ? getParentCombinedVariance(item.upc) : getItemVariance(item.upc);
+                const countStr = counts[item.upc] != null ? counts[item.upc] : '';
+                // hasVar: ignore anything within ±0.05 — fractional noise from SellingQty
+                // rounding (e.g. 0.33 vs 0.34) should not trigger a highlight
+                const hasVar = Math.abs(variance) >= 0.05;
+                // Display: 2dp, but when fractional part >= 0.95, round up to whole
+                // e.g. 0.66→"0.66", 0.99→"1", 1.34→"1.34", 2.97→"3"
+                const displayVal = (Math.abs(variance) % 1 >= 0.95) ? Math.round(variance) : parseFloat(variance.toFixed(2));
+                const signedVar = displayVal > 0 ? `+${displayVal}` : displayVal.toString();
+                const varClass = displayVal > 0 ? 'positive' : displayVal < 0 ? 'negative' : 'zero';
+                const highlightClass = (countStr !== '' && hasVar) ? ' highlight' : '';
+
+                // Determine if row should be hidden by filters
+                const hideVariance = showVarianceOnly && !hasVar;
+                const hideTicket = showTicketedOnly && !tickets.has(item.upc);
+                const hideLookup = lookupFilter !== '' && !item.description.toLowerCase().includes(lookupFilter);
+                if (hideVariance || hideTicket || hideLookup) return;
+
+                visibleIdx++;
+
+                const hasTicket = tickets.has(item.upc);
+                const ticketDot = hasTicket ? '<span class="ticket-indicator"></span>' : '';
+                const ticketBtnClass = hasTicket ? 'action-btn ticket-btn active' : 'action-btn ticket-btn';
+                const ticketQty = hasTicket ? (ticketQtys[item.upc] || 1) : 1;
+                const ticketQtyHtml = hasTicket
+                    ? `<input type="number" class="ticket-qty-input" id="ticket-qty-${item.upc}" value="${ticketQty}" min="1" max="999" onchange="setTicketQty('${escapeJs(item.upc)}', parseInt(this.value)||1)" title="Ticket quantity">`
+                    : '';
+                const combinedNote = isParent ? '<span class="combined-variance-note">(combined)</span>' : '';
+
+                html += `<tr class="parent-row">
+                    <td data-mobile-label="#">${visibleIdx}</td>
+                    <td class="upc" data-mobile-label="UPC">${escapeHtml(item.upc)}</td>
+                    <td class="description" data-mobile-label="Description">${escapeHtml(item.description)}${ticketDot}</td>
+                    <td class="stock-on-hand" id="soh-${item.upc}" data-mobile-label="Stock On Hand">${item.stock_on_hand.toFixed(2)}</td>
+                    <td data-mobile-label="Count"><input type="number" class="count-input${highlightClass}" id="count-${item.upc}"
+                        value="${escapeHtml(countStr)}" placeholder="--" min="0"
+                        oninput="onCountChange('${escapeJs(item.upc)}')" inputmode="numeric"></td>
+                    <td class="variance ${varClass}" id="var-${item.upc}" data-mobile-label="Variance">${signedVar}${combinedNote}</td>
+                    <td data-mobile-label="Actions">
+                        <div class="action-group">
+                            <button class="action-btn refresh-btn" onclick="refreshOneItem('${escapeJs(item.upc)}')">Refresh</button>
+                            <button class="action-btn clear-btn" onclick="clearItem('${escapeJs(item.upc)}')">Clear</button>
+                            <button class="${ticketBtnClass}" onclick="toggleTicket('${escapeJs(item.upc)}')">Ticket</button>
+                            ${ticketQtyHtml}
+                        </div>
+                    </td>
+                </tr>`;
+
+                // Render child rows under this parent
+                if (isParent) {
+                    const children = childrenByParent[item.upc];
+                    children.forEach(child => {
+                        const childCountStr = counts[child.upc] != null ? counts[child.upc] : '';
+                        const childHighlightClass = (childCountStr !== '') ? ' highlight' : '';
+
+                        // Apply filters to child rows too — child hides if parent would hide
+                        const childHideVariance = showVarianceOnly && !hasVar;
+                        const childHideTicket = showTicketedOnly && !tickets.has(child.upc) && !tickets.has(item.upc);
+                        if (childHideVariance || childHideTicket) return;
+
+                        const childHasTicket = tickets.has(child.upc);
+                        const childTicketDot = childHasTicket ? '<span class="ticket-indicator"></span>' : '';
+                        const childTicketBtnClass = childHasTicket ? 'action-btn ticket-btn active' : 'action-btn ticket-btn';
+                        const childTicketQty = childHasTicket ? (ticketQtys[child.upc] || 1) : 1;
+                        const childTicketQtyHtml = childHasTicket
+                            ? `<input type="number" class="ticket-qty-input" id="ticket-qty-${child.upc}" value="${childTicketQty}" min="1" max="999" onchange="setTicketQty('${escapeJs(child.upc)}', parseInt(this.value)||1)" title="Ticket quantity">`
+                            : '';
+
+                        html += `<tr class="child-row">
+                            <td data-mobile-label="#">&nbsp;</td>
+                            <td class="upc child-indent" data-mobile-label="UPC">${escapeHtml(child.upc)}</td>
+                            <td class="description" data-mobile-label="Description">${escapeHtml(child.description)}${childTicketDot}</td>
+                            <td class="stock-on-hand" id="soh-${child.upc}" data-mobile-label="Stock On Hand">${child.stock_on_hand.toFixed(2)}</td>
+                            <td data-mobile-label="Count"><input type="number" class="count-input${childHighlightClass}" id="count-${child.upc}"
+                                value="${escapeHtml(childCountStr)}" placeholder="--" min="0"
+                                oninput="onCountChange('${escapeJs(child.upc)}')" inputmode="numeric"></td>
+                            <td data-mobile-label="Variance">&nbsp;</td>
+                            <td data-mobile-label="Actions">
+                                <div class="action-group">
+                                    <button class="action-btn clear-btn" onclick="clearItem('${escapeJs(child.upc)}')">Clear</button>
+                                    <button class="${childTicketBtnClass}" onclick="toggleTicket('${escapeJs(child.upc)}')">Ticket</button>
+                                    ${childTicketQtyHtml}
+                                </div>
+                            </td>
+                        </tr>`;
+                    });
+                }
+            });
+
+            if (html === '') {
+                // All rows filtered out
+                const msg = showTicketedOnly
+                    ? 'No items with tickets match the current filter.'
+                    : 'No items with variance match the current filter.';
+                tbody.innerHTML = `
+                    <tr><td colspan="7">
+                        <div class="empty-state">
+                            <div class="icon">&#x1F914;</div>
+                            <p>${msg}</p>
+                        </div>
+                    </td></tr>`;
+                updateStats(allItems.length, getCountedCount(), getUnCountedCount(), getVarianceCount(), getTicketCount());
+                return;
+            }
+
+            tbody.innerHTML = html;
+            updateStats(allItems.length, getCountedCount(), getUnCountedCount(), getVarianceCount(), getTicketCount());
+        }
+
+        // ─────────────────────────────────────
+        //  Count & Variance Logic
+        // ─────────────────────────────────────
+
+        // Normal variance for a single item: count - SOH
+        function getItemVariance(upc) {
+            const countStr = counts[upc];
+            if (countStr == null || countStr === '') return 0;
+            const count = parseFloat(countStr) || 0;
+            const item = allItems.find(i => i.upc === upc);
+            if (!item) return 0;
+            return count - item.stock_on_hand;
+        }
+
+        // Combined variance for a parent item:
+        // (parent.count + Σ(child.count * child.selling_qty)) - parent.SOH
+        // Returns a float — rounding is done at display time so that
+        // fractional variances (e.g. from SellingQty=0.33) still register as non-zero.
+        function getParentCombinedVariance(parentUpc) {
+            const parentItem = allItems.find(i => i.upc === parentUpc);
+            if (!parentItem) return 0;
+
+            const parentCountStr = counts[parentUpc];
+            const parentCount = (parentCountStr != null && parentCountStr !== '') ? (parseFloat(parentCountStr) || 0) : 0;
+
+            let childrenContribution = 0;
+            let hasAnyCount = parentCountStr != null && parentCountStr !== '';
+            const children = childrenByParent[parentUpc] || [];
+            children.forEach(child => {
+                const childCountStr = counts[child.upc];
+                if (childCountStr != null && childCountStr !== '') {
+                    hasAnyCount = true;
+                    const childCount = parseFloat(childCountStr) || 0;
+                    childrenContribution += childCount * (child.selling_qty || 0);
+                }
+            });
+
+            // If no counts entered (parent or children), return 0 — same as getItemVariance
+            if (!hasAnyCount) return 0;
+
+            return (parentCount + childrenContribution) - parentItem.stock_on_hand;
+        }
+
+        function onCountChange(upc) {
+            // Persist the entered value into state FIRST so it survives re-renders.
+            const inputEl = document.getElementById(`count-${upc}`);
+            if (inputEl) {
+                if (inputEl.value === '') {
+                    delete counts[upc];
+                } else {
+                    counts[upc] = inputEl.value;
+                }
+            }
+
+            // Determine if this item is a parent, child, or standalone
+            const isParent = childrenByParent[upc] && childrenByParent[upc].length > 0;
+            const isChild = childUpcs.has(upc);
+
+            if (isParent) {
+                // Update parent's combined variance
+                const variance = getParentCombinedVariance(upc);
+                const varEl = document.getElementById(`var-${upc}`);
+                if (varEl) {
+                    const displayVal = (Math.abs(variance) % 1 >= 0.95) ? Math.round(variance) : parseFloat(variance.toFixed(2));
+                    const varClass = displayVal > 0 ? 'positive' : displayVal < 0 ? 'negative' : 'zero';
+                    varEl.textContent = (displayVal > 0 ? `+${displayVal}` : displayVal.toString()) + ' (combined)';
+                    varEl.className = `variance ${varClass}`;
+                }
+                if (inputEl) {
+                    const hasVar = Math.abs(variance) >= 0.05;
+                    inputEl.classList.toggle('highlight', hasVar);
+                }
+            } else if (isChild) {
+                // Child has no variance display — just update parent's combined variance
+                const childItem = allItems.find(i => i.upc === upc);
+                if (childItem && childItem.parent_upc) {
+                    const parentUpc2 = childItem.parent_upc.trim();
+                    const parentVariance = getParentCombinedVariance(parentUpc2);
+                    const parentVarEl = document.getElementById(`var-${parentUpc2}`);
+                    if (parentVarEl) {
+                        const displayVal = (Math.abs(parentVariance) % 1 >= 0.95) ? Math.round(parentVariance) : parseFloat(parentVariance.toFixed(2));
+                        const parentVarClass = displayVal > 0 ? 'positive' : displayVal < 0 ? 'negative' : 'zero';
+                        parentVarEl.textContent = (displayVal > 0 ? `+${displayVal}` : displayVal.toString()) + ' (combined)';
+                        parentVarEl.className = `variance ${parentVarClass}`;
+                    }
+                    const parentInputEl = document.getElementById(`count-${parentUpc2}`);
+                    if (parentInputEl) {
+                        const parentCountStr = counts[parentUpc2];
+                        const hasVar = Math.abs(parentVariance) >= 0.05;
+                        parentInputEl.classList.toggle('highlight', (parentCountStr != null && parentCountStr !== '' && hasVar));
+                    }
+                }
+            } else {
+                // Standalone item — normal variance
+                const variance = getItemVariance(upc);
+                const varEl = document.getElementById(`var-${upc}`);
+                if (!varEl) return;
+                const displayVal = (Math.abs(variance) % 1 >= 0.95) ? Math.round(variance) : parseFloat(variance.toFixed(2));
+                const varClass = displayVal > 0 ? 'positive' : displayVal < 0 ? 'negative' : 'zero';
+                varEl.textContent = displayVal > 0 ? `+${displayVal}` : displayVal.toString();
+                varEl.className = `variance ${varClass}`;
+                if (inputEl) {
+                    const hasVar = Math.abs(variance) >= 0.05;
+                    inputEl.classList.toggle('highlight', hasVar);
+                }
+            }
+
+            updateStats(allItems.length, getCountedCount(), getUnCountedCount(), getVarianceCount(), getTicketCount());
+        }
+
+        // Fix: counted = any item with a non-empty count string (including 0)
+        function getCountedCount() {
+            return allItems.filter(item => {
+                const v = counts[item.upc];
+                return v != null && v !== '';
+            }).length;
+        }
+
+        function getUnCountedCount() {
+            return allItems.filter(item => {
+                const v = counts[item.upc];
+                return v == null || v === '';
+            }).length;
+        }
+
+        function getVarianceCount() {
+            return allItems.filter(item => {
+                // Children never count as having variance
+                if (childUpcs.has(item.upc)) return false;
+                const isParent = childrenByParent[item.upc] && childrenByParent[item.upc].length > 0;
+                if (isParent) {
+                    // Parent: use combined variance (epsilon for float comparison)
+                    return Math.abs(getParentCombinedVariance(item.upc)) >= 0.05;
+                }
+                // Standalone item: count - SOH
+                const v = counts[item.upc];
+                if (v == null || v === '') return false;
+                const count = parseFloat(v) || 0;
+                const variance = count - item.stock_on_hand;
+                return Math.abs(variance) >= 0.05;
+            }).length;
+        }
+
+        function getTicketCount() {
+            return tickets.size;
+        }
+
+        // ─────────────────────────────────────
+        //  Per-item actions
+        // ─────────────────────────────────────
+
+        // Refresh: re-fetch StockOnHand for a single item from the DB
+        // If the item is a parent, also refresh all its children
+        async function refreshOneItem(upc) {
+            showDialog('Refreshing...', `Updating stock for ${upc}`);
+            try {
+                const isParent = childrenByParent[upc] && childrenByParent[upc].length > 0;
+                const upcsToRefresh = [upc];
+                if (isParent) {
+                    childrenByParent[upc].forEach(child => upcsToRefresh.push(child.upc));
+                }
+
+                // Refresh all UPCs in parallel
+                const results = await Promise.all(upcsToRefresh.map(async (refreshUpc) => {
+                    try {
+                        const resp = await fetch(`/api/refresh-upc?upc=${encodeURIComponent(refreshUpc)}`);
+                        if (!resp.ok) {
+                            const err = await resp.json().catch(() => ({}));
+                            throw new Error(err.error || `HTTP ${resp.status}`);
+                        }
+                        const data = await resp.json();
+                        return { upc: refreshUpc, stock_on_hand: data.stock_on_hand, error: null };
+                    } catch (e) {
+                        return { upc: refreshUpc, stock_on_hand: null, error: e.message };
+                    }
+                }));
+
+                // Apply results
+                let errors = [];
+                results.forEach(r => {
+                    if (r.error) {
+                        errors.push(`${r.upc}: ${r.error}`);
+                        return;
+                    }
+                    const item = allItems.find(i => i.upc === r.upc);
+                    if (item) {
+                        item.stock_on_hand = r.stock_on_hand;
+                        // Update the SOH cell
+                        const sohEl = document.getElementById(`soh-${r.upc}`);
+                        if (sohEl) sohEl.textContent = r.stock_on_hand.toFixed(2);
+                    }
+                });
+
+                if (errors.length > 0) {
+                    console.warn('Some items failed to refresh:', errors);
+                }
+
+                // Update variance displays
+                onCountChange(upc);
+            } catch (e) {
+                alert(`❌ Failed to refresh item: ${e.message}`);
+            } finally {
+                hideDialog();
+            }
+        }
+
+        // Clear: remove this item's count so it can be recounted
+        function clearItem(upc) {
+            delete counts[upc];
+            const inputEl = document.getElementById(`count-${upc}`);
+            if (inputEl) {
+                inputEl.value = '';
+                inputEl.classList.remove('highlight');
+                inputEl.focus();
+            }
+            // Reset variance display
+            onCountChange(upc);
+        }
+
+        // Refresh All: re-fetch StockOnHand for every visible item from the DB
+        async function refreshAllItems() {
+            if (allItems.length === 0) {
+                alert('No items loaded. Please run a search first.');
+                return;
+            }
+            showDialog('Refreshing all items...', `Updating stock for ${allItems.length} items`);
+            try {
+                // Refresh all UPCs in parallel
+                const results = await Promise.all(allItems.map(async (item) => {
+                    try {
+                        const resp = await fetch(`/api/refresh-upc?upc=${encodeURIComponent(item.upc)}`);
+                        if (!resp.ok) {
+                            const err = await resp.json().catch(() => ({}));
+                            throw new Error(err.error || `HTTP ${resp.status}`);
+                        }
+                        const data = await resp.json();
+                        return { upc: item.upc, stock_on_hand: data.stock_on_hand, error: null };
+                    } catch (e) {
+                        return { upc: item.upc, stock_on_hand: null, error: e.message };
+                    }
+                }));
+
+                // Apply results
+                let errors = [];
+                results.forEach(r => {
+                    if (r.error) {
+                        errors.push(`${r.upc}: ${r.error}`);
+                        return;
+                    }
+                    const item = allItems.find(i => i.upc === r.upc);
+                    if (item) {
+                        item.stock_on_hand = r.stock_on_hand;
+                        const sohEl = document.getElementById(`soh-${r.upc}`);
+                        if (sohEl) sohEl.textContent = r.stock_on_hand.toFixed(2);
+                    }
+                });
+
+                if (errors.length > 0) {
+                    console.warn('Some items failed to refresh:', errors);
+                }
+
+                // Update variance displays for all items
+                allItems.forEach(item => onCountChange(item.upc));
+
+                // Update stats
+                updateStats(allItems.length, getCountedCount(), getUnCountedCount(), getVarianceCount(), getTicketCount());
+            } catch (e) {
+                alert(`❌ Failed to refresh items: ${e.message}`);
+            } finally {
+                hideDialog();
+            }
+        }
+
+        // Lookup filter: filter displayed rows by description (case-insensitive)
+        function onLookupChange() {
+            lookupFilter = document.getElementById('lookup-input').value.trim().toLowerCase();
+            renderTable();
+        }
+
+        function clearLookup() {
+            lookupFilter = '';
+            document.getElementById('lookup-input').value = '';
+            renderTable();
+        }
+
+        // Toggle Ticket: toggle ticket on/off for this item
+        function toggleTicket(upc) {
+            if (tickets.has(upc)) {
+                tickets.delete(upc);
+                delete ticketQtys[upc];
+            } else {
+                tickets.add(upc);
+                if (!ticketQtys[upc]) ticketQtys[upc] = 1;
+            }
+            renderTable();
+        }
+
+        // Update ticket quantity for an item
+        function setTicketQty(upc, qty) {
+            ticketQtys[upc] = qty;
+        }
+
+        // ─────────────────────────────────────
+        //  Variance Filter Toggle
+        // ─────────────────────────────────────
+        function toggleVarianceFilter() {
+            showVarianceOnly = !showVarianceOnly;
+            const cb = document.getElementById('show-variance-only');
+            const toggle = document.getElementById('variance-toggle');
+            cb.checked = showVarianceOnly;
+            toggle.classList.toggle('active', showVarianceOnly);
+            renderTable();
+        }
+
+        document.getElementById('show-variance-only').addEventListener('change', function() {
+            showVarianceOnly = this.checked;
+            document.getElementById('variance-toggle').classList.toggle('active', this.checked);
+            renderTable();
+        });
+
+        // ─────────────────────────────────────
+        //  Show-Ticketed-Only Filter Toggle
+        // ─────────────────────────────────────
+        function toggleTicketFilter() {
+            showTicketedOnly = !showTicketedOnly;
+            const cb = document.getElementById('show-ticketed-only');
+            const toggle = document.getElementById('ticket-filter-toggle');
+            cb.checked = showTicketedOnly;
+            toggle.classList.toggle('active', showTicketedOnly);
+            renderTable();
+        }
+
+        document.getElementById('show-ticketed-only').addEventListener('change', function() {
+            showTicketedOnly = this.checked;
+            document.getElementById('ticket-filter-toggle').classList.toggle('active', this.checked);
+            renderTable();
+        });
+
+        // ─────────────────────────────────────
+        //  Treat-No-Count-As-Zero Toggle
+        // ─────────────────────────────────────
+        function toggleZeroCount() {
+            treatNoCountAsZero = !treatNoCountAsZero;
+            const cb = document.getElementById('treat-no-count-zero');
+            const toggle = document.getElementById('zero-toggle');
+            cb.checked = treatNoCountAsZero;
+            toggle.classList.toggle('active', treatNoCountAsZero);
+        }
+
+        document.getElementById('treat-no-count-zero').addEventListener('change', function() {
+            treatNoCountAsZero = this.checked;
+            document.getElementById('zero-toggle').classList.toggle('active', this.checked);
+        });
+
+        // ─────────────────────────────────────
+        //  Stats Bar
+        // ─────────────────────────────────────
+        function updateStats(total, counted, uncounted, variance, ticketsCount) {
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-counted').textContent = counted;
+            document.getElementById('stat-uncounted').textContent = uncounted;
+            document.getElementById('stat-variance').textContent = variance;
+            document.getElementById('stat-tickets').textContent = ticketsCount;
+        }
+
+        // ─────────────────────────────────────
+        //  Save Results (server-side CSV save)
+        // ─────────────────────────────────────
+        async function saveResults() {
+            // Build rows: counted items + (if treatNoCountAsZero) uncounted items as 0
+            let rows = [];
+
+            allItems.forEach(item => {
+                const v = counts[item.upc];
+                const hasCount = v != null && v !== '';
+                const count = hasCount ? Math.round(parseFloat(v) || 0) : 0;
+
+                if (hasCount) {
+                    // User entered a count — always include
+                    rows.push({
+                        upc: item.upc,
+                        description: item.description,
+                        department: item.department || '',
+                        supplier: item.supplier || '',
+                        stock_on_hand: item.stock_on_hand,
+                        count: count,
+                        variance: count - item.stock_on_hand,
+                        has_ticket: tickets.has(item.upc),
+                        ticket_qty: tickets.has(item.upc) ? (ticketQtys[item.upc] || 1) : 1
+                    });
+                } else if (treatNoCountAsZero) {
+                    // No count entered, but "treat as zero" is on — include as 0
+                    rows.push({
+                        upc: item.upc,
+                        description: item.description,
+                        department: item.department || '',
+                        supplier: item.supplier || '',
+                        stock_on_hand: item.stock_on_hand,
+                        count: 0,
+                        variance: 0 - item.stock_on_hand,
+                        has_ticket: tickets.has(item.upc),
+                        ticket_qty: tickets.has(item.upc) ? (ticketQtys[item.upc] || 1) : 1
+                    });
+                }
+            });
+
+            // Always include ticketed items so .qry is generated even when
+            // no count was entered and "treat as zero" is off.
+            const rowUpcs = new Set(rows.map(r => r.upc));
+            for (const item of allItems) {
+                if (!rowUpcs.has(item.upc) && tickets.has(item.upc)) {
+                    rows.push({
+                        upc: item.upc,
+                        description: item.description,
+                        department: item.department || '',
+                        supplier: item.supplier || '',
+                        stock_on_hand: item.stock_on_hand,
+                        count: 0,
+                        variance: 0 - item.stock_on_hand,
+                        has_ticket: true,
+                        ticket_qty: ticketQtys[item.upc] || 1
+                    });
+                }
+            }
+
+            if (rows.length === 0) {
+                alert('No items have been counted yet. Please enter counts before saving.');
+                return;
+            }
+
+            const saveBtn = document.querySelector('.btn-save');
+            const originalLabel = saveBtn ? saveBtn.textContent : 'Export Count';
+            if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Exporting…'; }
+
+            try {
+                const resp = await fetch('/api/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rows })
+                });
+                const data = await resp.json().catch(() => ({}));
+
+                if (!resp.ok) {
+                    throw new Error(data.message || `Server returned ${resp.status}`);
+                }
+
+                const fileMsg = data.txt_written
+                    ? `\nFile: ${data.file}`
+                    : '\n(No count file — .qry only)';
+                alert(`✅ Saved ${data.rows || rows.length} item(s).` + fileMsg);
+                // Don't resetAll — let user review, they can click Reset
+            } catch (err) {
+                alert(`❌ Failed to save: ${err.message}`);
+            } finally {
+                if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = originalLabel; }
+            }
+        }
+
+        // ─────────────────────────────────────
+        //  Load Count File
+        // ─────────────────────────────────────
+        async function handleFileLoad(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // If no items loaded yet, we need to search first
+            if (allItems.length === 0) {
+                alert('Please run a search first, then load the count file.');
+                input.value = '';
+                return;
+            }
+
+            showDialog('Loading count file...', file.name);
+
+            try {
+                const text = await file.text();
+                const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
+                let loaded = 0;
+                let notFound = 0;
+
+                lines.forEach(line => {
+                    // Expected format: 0,<UPC>,<Count>,
+                    const parts = line.split(',');
+                    if (parts.length < 3) return;
+                    const upc = parts[1].trim();
+                    const count = parseFloat(parts[2].trim());
+
+                    if (isNaN(count)) return;
+
+                    // Check if this UPC exists in our current items list
+                    const item = allItems.find(i => i.upc === upc);
+                    if (item) {
+                        counts[upc] = Math.round(count).toString();
+                        loaded++;
+                    } else {
+                        notFound++;
+                    }
+                });
+
+                renderTable();
+                hideDialog();
+
+                let msg = `Loaded ${loaded} count(s) from ${file.name}.`;
+                if (notFound > 0) {
+                    msg += `\n${notFound} UPC(s) in the file were not found in the current search results.`
+                }
+                alert(msg);
+            } catch (e) {
+                hideDialog();
+                alert(`❌ Failed to load file: ${e.message}`);
+            }
+
+            // Reset the input so the same file can be re-loaded
+            input.value = '';
+        }
+
+        // ─────────────────────────────────────
+        //  Print Count Sheet
+        // ─────────────────────────────────────
+        function printCountSheet() {
+            if (allItems.length === 0) {
+                alert('No items loaded. Please run a search first.');
+                return;
+            }
+
+            const tbody = document.getElementById('count-sheet-body');
+            let html = '';
+            let visibleIdx = 0;
+
+            // First pass: determine which items are visible (matching renderTable filters)
+            // and whether any of them have counts entered
+            let visibleItems = [];
+            let hasAnyCount = false;
+
+            allItems.forEach((item) => {
+                if (childUpcs.has(item.upc)) return;
+
+                const isParent = childrenByParent[item.upc] && childrenByParent[item.upc].length > 0;
+                const variance = isParent ? getParentCombinedVariance(item.upc) : getItemVariance(item.upc);
+                const hasVar = Math.abs(variance) >= 0.05;
+
+                const hideVariance = showVarianceOnly && !hasVar;
+                const hideTicket = showTicketedOnly && !tickets.has(item.upc);
+                const hideLookup = lookupFilter !== '' && !item.description.toLowerCase().includes(lookupFilter);
+                if (hideVariance || hideTicket || hideLookup) return;
+
+                const v = counts[item.upc];
+                if (v != null && v !== '') hasAnyCount = true;
+
+                visibleItems.push({ item, isParent, variance });
+            });
+
+            // Also check children for counts
+            if (!hasAnyCount) {
+                allItems.forEach((item) => {
+                    if (!childUpcs.has(item.upc)) return;
+                    const v = counts[item.upc];
+                    if (v != null && v !== '') hasAnyCount = true;
+                });
+            }
+
+            if (visibleItems.length === 0) {
+                alert('No items to print. Adjust your filters and try again.');
+                return;
+            }
+
+            // Choose layout based on whether counts exist
+            // Generate the appropriate thead
+            const thead = document.getElementById('count-sheet-head');
+            if (hasAnyCount) {
+                thead.innerHTML = `<tr>
+                    <th>#</th><th>UPC</th><th>Description</th>
+                    <th>Stock On Hand</th><th>Count</th><th>Var</th><th>Recount</th>
+                </tr>`;
+            } else {
+                thead.innerHTML = `<tr>
+                    <th>#</th><th>UPC</th><th>Description</th>
+                    <th>Stock On Hand</th><th>Count</th><th>Ticket</th>
+                </tr>`;
+            }
+
+            if (hasAnyCount) {
+                // ── Counted layout: #, UPC, Description, SoH, Count, Var, Recount Box ──
+                visibleItems.forEach(({ item, isParent, variance }) => {
+                    visibleIdx++;
+                    const hasTicket = tickets.has(item.upc);
+                    const soh = item.stock_on_hand.toFixed(2);
+                    const v = counts[item.upc];
+                    const hasCount = v != null && v !== '';
+                    const countVal = hasCount ? (Math.round(parseFloat(v) || 0)).toString() : '';
+                    const varVal = hasCount ? (Math.round(parseFloat(v) || 0) - item.stock_on_hand).toFixed(2) : '';
+                    const varClass = parseFloat(varVal) < 0 ? 'var-negative' : (parseFloat(varVal) > 0 ? 'var-positive' : '');
+
+                    html += `<tr class="parent-row">
+                        <td>${visibleIdx}</td>
+                        <td class="upc">${escapeHtml(item.upc)}</td>
+                        <td class="description">${escapeHtml(item.description)}</td>
+                        <td class="stock-on-hand">${soh}</td>
+                        <td class="count-val">${countVal}</td>
+                        <td class="variance-cell ${varClass}">${varVal}</td>
+                        <td><div class="count-box"></div></td>
+                    </tr>`;
+
+                    if (isParent) {
+                        const children = childrenByParent[item.upc];
+                        children.forEach(child => {
+                            const childHasTicket = tickets.has(child.upc);
+                            const childSoh = child.stock_on_hand.toFixed(2);
+                            const cv = counts[child.upc];
+                            const childHasCount = cv != null && cv !== '';
+                            const childCountVal = childHasCount ? (Math.round(parseFloat(cv) || 0)).toString() : '';
+                            const childVarVal = childHasCount ? (Math.round(parseFloat(cv) || 0) - child.stock_on_hand).toFixed(2) : '';
+                            const childVarClass = parseFloat(childVarVal) < 0 ? 'var-negative' : (parseFloat(childVarVal) > 0 ? 'var-positive' : '');
+
+                            html += `<tr class="child-row">
+                                <td></td>
+                                <td class="upc"><span class="indent-marker">├─</span>${escapeHtml(child.upc)}</td>
+                                <td class="description">${escapeHtml(child.description)}</td>
+                                <td class="stock-on-hand">${childSoh}</td>
+                                <td class="count-val">${childCountVal}</td>
+                                <td class="variance-cell ${childVarClass}">${childVarVal}</td>
+                                <td><div class="count-box"></div></td>
+                            </tr>`;
+                        });
+                    }
+                });
+            } else {
+                // ── Blank layout: #, UPC, Description, SoH, Count, Ticket ──
+                visibleItems.forEach(({ item, isParent }) => {
+                    visibleIdx++;
+                    const hasTicket = tickets.has(item.upc);
+                    const soh = item.stock_on_hand.toFixed(2);
+
+                    html += `<tr class="parent-row">
+                        <td>${visibleIdx}</td>
+                        <td class="upc">${escapeHtml(item.upc)}</td>
+                        <td class="description">${escapeHtml(item.description)}</td>
+                        <td class="stock-on-hand">${soh}</td>
+                        <td><div class="count-box"></div></td>
+                        <td class="ticket-cell"><input type="checkbox" ${hasTicket ? 'checked' : ''}></td>
+                    </tr>`;
+
+                    if (isParent) {
+                        const children = childrenByParent[item.upc];
+                        children.forEach(child => {
+                            const childHasTicket = tickets.has(child.upc);
+                            const childSoh = child.stock_on_hand.toFixed(2);
+
+                            html += `<tr class="child-row">
+                                <td></td>
+                                <td class="upc"><span class="indent-marker">├─</span>${escapeHtml(child.upc)}</td>
+                                <td class="description">${escapeHtml(child.description)}</td>
+                                <td class="stock-on-hand">${childSoh}</td>
+                                <td><div class="count-box"></div></td>
+                                <td class="ticket-cell"><input type="checkbox" ${childHasTicket ? 'checked' : ''}></td>
+                            </tr>`;
+                        });
+                    }
+                });
+            }
+
+            tbody.innerHTML = html;
+
+            // Small delay to ensure DOM is updated before print dialog
+            setTimeout(() => {
+                window.print();
+            }, 100);
+        }
+
+        // ─────────────────────────────────────
+        //  Reset
+        // ─────────────────────────────────────
+        function resetAll() {
+            allItems = [];
+            counts = {};
+            tickets = new Set();
+            ticketQtys = {};
+            childrenByParent = {};
+            childUpcs = new Set();
+            lastFilter = { dept: 'ALL', sup: 'ALL' };
+            showVarianceOnly = false;
+            showTicketedOnly = false;
+            document.getElementById('show-variance-only').checked = false;
+            document.getElementById('variance-toggle').classList.remove('active');
+            document.getElementById('show-ticketed-only').checked = false;
+            document.getElementById('ticket-filter-toggle').classList.remove('active');
+            document.getElementById('results-body').innerHTML = `
+                <tr><td colspan="7">
+                    <div class="empty-state">
+                        <div class="icon">&#x1F50D;</div>
+                        <p>Select a department and/or supplier, then click Search</p>
+                    </div>
+                </td></tr>`;
+            document.getElementById('lookup-input').value = '';
+            lookupFilter = '';
+            document.getElementById('department-select').value = 'ALL';
+            // Reset tracking boxes
+            updateStats(0, 0, 0, 0, 0);
+            // Reset supplier list to full list
+            const supSel = document.getElementById('supplier-select');
+            supSel.innerHTML = '<option value="ALL">All Suppliers</option>';
+            allSuppliers.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.supplier;
+                opt.textContent = s.label || s.supplier;
+                supSel.appendChild(opt);
+            });
+        }
+
+        // ─────────────────────────────────────
+        //  Utilities
+        // ─────────────────────────────────────
+        function escapeJs(str) {
+            return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
