@@ -1043,6 +1043,12 @@
                     <option value="ALL">All Suppliers</option>
                 </select>
             </div>
+            <div class="form-group" id="sub-dep-group" style="display:none;">
+                <label for="sub-dep-select">Sub-Department</label>
+                <select id="sub-dep-select">
+                    <option value="ALL">All Sub-Departments</option>
+                </select>
+            </div>
             <button class="btn btn-reset" onclick="resetAll()">Reset</button>
             <button class="btn btn-search" onclick="searchItems()">Search</button>
         </div>
@@ -1188,7 +1194,7 @@
         // ticketQtys[upc] = number of tickets (default 1)
         let ticketQtys = {};
         // Remember the filter used for the last search so Refresh can reuse it.
-        let lastFilter = { dept: 'ALL', sup: 'ALL' };
+        let lastFilter = { dept: 'ALL', sup: 'ALL', subDep: 'ALL' };
         // All suppliers list (for restoring when dept = ALL)
         let allSuppliers = [];
         // Parent-child relationship maps (built after each search)
@@ -1261,6 +1267,32 @@
         async function onDepartmentChange() {
             const dept = document.getElementById('department-select').value;
             await loadSuppliersForDepartment(dept);
+            await loadSubDepartments(dept);
+        }
+
+        async function loadSubDepartments(dept) {
+            const subGroup = document.getElementById('sub-dep-group');
+            const subSel = document.getElementById('sub-dep-select');
+            if (!dept || dept === 'ALL') {
+                subGroup.style.display = 'none';
+                subSel.innerHTML = '<option value="ALL">All Sub-Departments</option>';
+                return;
+            }
+            try {
+                const resp = await fetch(`/api/sub-departments?department=${encodeURIComponent(dept)}`);
+                const subs = await resp.json();
+                subSel.innerHTML = '<option value="ALL">All Sub-Departments</option>';
+                subs.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = s.description || s.id;
+                    subSel.appendChild(opt);
+                });
+                subGroup.style.display = '';
+            } catch (e) {
+                console.error('Failed to load sub-departments:', e);
+                subGroup.style.display = 'none';
+            }
         }
 
         async function loadSuppliersForDepartment(dept) {
@@ -1337,13 +1369,15 @@
         async function searchItems() {
             const dept = document.getElementById('department-select').value;
             const sup = document.getElementById('supplier-select').value;
+            const subDep = document.getElementById('sub-dep-select').value;
 
             let url = '/api/search?';
             if (dept !== 'ALL') url += `department=${encodeURIComponent(dept)}&`;
             if (sup !== 'ALL') url += `supplier=${encodeURIComponent(sup)}&`;
+            if (subDep !== 'ALL') url += `sub_department=${encodeURIComponent(subDep)}&`;
 
             // Remember this filter so Refresh can re-run the same query.
-            lastFilter = { dept, sup };
+            lastFilter = { dept, sup, subDep };
             // A fresh search starts a new count session — clear prior counts.
             counts = {};
             tickets = new Set();
@@ -2408,7 +2442,9 @@
             ticketQtys = {};
             childrenByParent = {};
             childUpcs = new Set();
-            lastFilter = { dept: 'ALL', sup: 'ALL' };
+            lastFilter = { dept: 'ALL', sup: 'ALL', subDep: 'ALL' };
+            document.getElementById('sub-dep-select').value = 'ALL';
+            document.getElementById('sub-dep-group').style.display = 'none';
             showVarianceOnly = false;
             showTicketedOnly = false;
             document.getElementById('show-variance-only').checked = false;

@@ -15,13 +15,6 @@ pub struct StockItem {
     pub selling_qty: f64,
 }
 
-/// Query string params for `/api/search` (department / supplier, both default ALL).
-#[derive(Debug, Deserialize)]
-pub struct SearchQuery {
-    pub department: Option<String>,
-    pub supplier: Option<String>,
-}
-
 /// Query string params for `/api/refresh-upc` (single UPC lookup).
 #[derive(Debug, Deserialize)]
 pub struct UpcQuery {
@@ -34,10 +27,32 @@ pub struct BarcodeQuery {
     pub barcode: String,
 }
 
+/// Query string params for `/api/sub-departments` (department filter).
+#[derive(Debug, Deserialize)]
+pub struct SubDeptQuery {
+    pub department: Option<String>,
+}
+
 /// Query string params for `/api/suppliers-for-dept` (department filter).
 #[derive(Debug, Deserialize)]
 pub struct DeptQuery {
     pub department: Option<String>,
+}
+
+/// A sub-department option.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SubDepartment {
+    pub id: String,
+    pub description: String,
+    pub dep_id: String,
+}
+
+/// Query string params for `/api/search` (department / supplier / sub-department, all default ALL).
+#[derive(Debug, Deserialize)]
+pub struct SearchQuery {
+    pub department: Option<String>,
+    pub supplier: Option<String>,
+    pub sub_department: Option<String>,
 }
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SaveRow {
@@ -349,6 +364,33 @@ impl DbPool {
         Ok(upcs)
     }
 
+    /// Fetch sub-departments for a given department.
+    /// Query: SELECT [ID], [Description], [DepID] FROM SubDepartments WHERE DepID = '<dept>'
+    pub async fn get_sub_departments(&self, department: &str) -> Result<Vec<SubDepartment>, DbError> {
+        let mut conn = self.pool.get().await.map_err(|e| DbError::Connection(e.to_string()))?;
+        let safe_dept = department.replace('\'', "''");
+        let query = format!(
+            "SELECT [ID], [Description], [DepID] FROM SubDepartments WHERE DepID = '{}'",
+            safe_dept
+        );
+        let mut stream = conn.query(&query, &[])
+            .await
+            .map_err(|e| DbError::Query(e.to_string()))?;
+
+        let mut subs = Vec::new();
+        while let Some(item) = stream.next().await {
+            let item = item.map_err(|e| DbError::Query(e.to_string()))?;
+            if let QueryItem::Row(row) = item {
+                subs.push(SubDepartment {
+                    id: cell_to_string(&row, 0),
+                    description: cell_to_string(&row, 1),
+                    dep_id: cell_to_string(&row, 2),
+                });
+            }
+        }
+        Ok(subs)
+    }
+
     /// Fetch suppliers that appear in items belonging to a given department.
     /// If department is "ALL" or empty, returns all suppliers (same as get_suppliers).
     pub async fn get_suppliers_for_department(&self, department: &str) -> Result<Vec<Supplier>, DbError> {
@@ -423,7 +465,7 @@ impl DbPool {
         Ok(results)
     }
 
-    pub async fn search_items(&self, department: &str, supplier: &str) -> Result<Vec<StockItem>, DbError> {
+    pub async fn search_items(&self, department: &str, supplier: &str, sub_department: &str) -> Result<Vec<StockItem>, DbError> {
         let mut conn = self.pool.get().await.map_err(|e| DbError::Connection(e.to_string()))?;
         let dept_clause = if department != "ALL" && !department.is_empty() {
             format!(" AND i.Department = '{}'", department.replace('\'', "''"))
@@ -432,6 +474,11 @@ impl DbPool {
         };
         let sup_clause = if supplier != "ALL" && !supplier.is_empty() {
             format!(" AND i.Supplier = '{}'", supplier.replace('\'', "''"))
+        } else {
+            String::new()
+        };
+        let sub_dept_clause = if sub_department != "ALL" && !sub_department.is_empty() {
+            format!(" AND i.SubDepartment = '{}'", sub_department.replace('\'', "''"))
         } else {
             String::new()
         };
@@ -454,8 +501,9 @@ impl DbPool {
             WHERE i.InActive = '0'
                 {}
                 {}
+                {}
             ORDER BY i.[Description]",
-            dept_clause, sup_clause
+            dept_clause, sup_clause, sub_dept_clause
         );
         
         let mut items = Vec::new();

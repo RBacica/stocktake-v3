@@ -16,7 +16,8 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
         .service(web::resource("/api/search").route(web::get().to(search_items)))
         .service(web::resource("/api/save").route(web::post().to(save_counts)))
         .service(web::resource("/api/refresh-upc").route(web::get().to(refresh_upc)))
-        .service(web::resource("/api/barcode-lookup").route(web::get().to(barcode_lookup)));
+        .service(web::resource("/api/barcode-lookup").route(web::get().to(barcode_lookup)))
+        .service(web::resource("/api/sub-departments").route(web::get().to(get_sub_departments)));
 }
 
 // ─────────────────────────────────────────────
@@ -60,11 +61,30 @@ async fn search_items(
 ) -> HttpResponse {
     let dept = query.department.clone().unwrap_or_else(|| "ALL".to_string());
     let sup = query.supplier.clone().unwrap_or_else(|| "ALL".to_string());
+    let sub_dept = query.sub_department.clone().unwrap_or_else(|| "ALL".to_string());
 
-    match pool.search_items(&dept, &sup).await {
+    match pool.search_items(&dept, &sup, &sub_dept).await {
         Ok(items) => HttpResponse::Ok().json(items),
         Err(e) => {
             eprintln!("Failed to search items: {}", e);
+            HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": format!("Database error: {}", e)
+            }))
+        }
+    }
+}
+
+/// GET /api/sub-departments?department=<id>
+/// Returns sub-departments for the given department.
+async fn get_sub_departments(
+    pool: web::Data<db::DbPool>,
+    query: web::Query<db::SubDeptQuery>,
+) -> HttpResponse {
+    let dept = query.department.clone().unwrap_or_default();
+    match pool.get_sub_departments(&dept).await {
+        Ok(subs) => HttpResponse::Ok().json(subs),
+        Err(e) => {
+            eprintln!("Failed to get sub-departments for dept {}: {}", dept, e);
             HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": format!("Database error: {}", e)
             }))
