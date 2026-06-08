@@ -1223,10 +1223,13 @@
                 });
             }
 
-            document.getElementById('barcode-input').addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { e.preventDefault(); resolveScannedBarcode(this.value.trim()); }
-            });
-            document.getElementById('barcode-input').addEventListener('input', function() { updatePromptText(); });
+            const barcodeInput = document.getElementById('barcode-input');
+            if (barcodeInput) {
+                barcodeInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { e.preventDefault(); resolveScannedBarcode(this.value.trim()); }
+                });
+                barcodeInput.addEventListener('input', function() { updatePromptText(); });
+            }
             // Enter-to-advance for count inputs
             document.getElementById('results-body').addEventListener('keydown', (e) => {
                 const input = e.target;
@@ -1922,11 +1925,10 @@
             if (barcodeMode) {
                 if (bar) bar.classList.add('open');
                 if (btn) btn.classList.add('active');
-                if (document.getElementById('barcode-input')) {
-                    document.getElementById('barcode-input').value = '';
-                    promptText = '';
-                    document.getElementById('barcode-input').focus();
-                }
+                setTimeout(() => {
+                    const input = document.getElementById('barcode-input');
+                    if (input) { input.value = ''; promptText = ''; input.focus(); input.select(); }
+                }, 0)
                 setBarcodeStatus('');
                 pendingBarcodeUPCs = [];
             } else {
@@ -1942,7 +1944,10 @@
             const raw = value || promptText;
             if (!raw) {
                 setBarcodeStatus('Scan or type a barcode first', true);
-                if (document.getElementById('barcode-input')) document.getElementById('barcode-input').focus();
+                setTimeout(() => {
+                    const input = document.getElementById('barcode-input');
+                    if (input) { input.focus(); input.select(); }
+                }, 0);
                 return;
             }
             setBarcodeStatus('Looking up: ' + raw);
@@ -2002,16 +2007,21 @@
             countInput.select();
             setBarcodeStatus('Found: ' + upc);
             const moveFocusBack = () => {
-                if (document.getElementById('barcode-input')) {
-                    document.getElementById('barcode-input').value = '';
-                    promptText = '';
-                    document.getElementById('barcode-input').focus();
-                }
+                setTimeout(() => {
+                    const input = document.getElementById('barcode-input');
+                    if (input) { input.value = ''; promptText = ''; input.focus(); input.select(); }
+                }, 0)
                 setBarcodeStatus('');
             };
             countInput.addEventListener('change', moveFocusBack, { once: true });
             countInput.addEventListener('keydown', function h(e) {
                 if (e.key === 'Enter') {
+                    e.preventDefault();
+                    countInput.removeEventListener('keydown', h);
+                    moveFocusBack();
+                    return;
+                }
+                if (e.key === 'Tab') {
                     e.preventDefault();
                     countInput.removeEventListener('keydown', h);
                     moveFocusBack();
