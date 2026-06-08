@@ -1235,6 +1235,7 @@
                 const input = e.target;
                 if (!input.classList.contains('count-input')) return;
                 if (e.key !== 'Enter') return;
+                if (window.__barcodeModeActive) { e.stopPropagation(); return; }
                 e.preventDefault();
                 const inputs = Array.from(document.querySelectorAll('.count-input'));
                 const idx = inputs.indexOf(input);
