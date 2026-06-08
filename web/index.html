@@ -269,6 +269,23 @@
             accent-color: #cc77ff;
         }
 
+        .toggle-checkbox.uncounted-toggle {
+            border-color: #ff9f43;
+        }
+
+        .toggle-checkbox.uncounted-toggle:hover {
+            border-color: #ffb36b;
+        }
+
+        .toggle-checkbox.uncounted-toggle.active {
+            background: #2e2215;
+            border-color: #ff9f43;
+        }
+
+        .toggle-checkbox.uncounted-toggle input[type="checkbox"] {
+            accent-color: #ff9f43;
+        }
+
         .btn-clear-lookup {
             padding: 8px 14px;
             border: 1px solid #555;
@@ -940,6 +957,10 @@
                     <input type="checkbox" id="treat-no-count-zero" checked>
                     <label for="treat-no-count-zero">No Count as Zero</label>
                 </div>
+                <div class="toggle-checkbox uncounted-toggle" id="uncounted-toggle" onclick="toggleUncountedFilter()">
+                    <input type="checkbox" id="show-uncounted-only">
+                    <label for="show-uncounted-only">Uncounted</label>
+                </div>
                 <button class="btn btn-refresh" onclick="refreshAllItems()">Refresh All</button>
                 <button class="btn btn-print" onclick="printCountSheet()">Print Count Sheet</button>
             </div>
@@ -1031,6 +1052,7 @@
         let allItems = [];
         let showVarianceOnly = false;
         let showTicketedOnly = false;
+        let showUncountedOnly = false;
         let treatNoCountAsZero = true;
         // counts[upc] = string entered by the user. Lives in JS state so it
         // survives full table re-renders (variance filter, refresh, clear).
@@ -1197,6 +1219,10 @@
             document.getElementById('show-ticketed-only').checked = false;
             document.getElementById('ticket-filter-toggle').classList.remove('active');
 
+            showUncountedOnly = false;
+            document.getElementById('show-uncounted-only').checked = false;
+            document.getElementById('uncounted-toggle').classList.remove('active');
+
             // Show loading
             document.getElementById('results-body').innerHTML = `
                 <tr><td colspan="7">
@@ -1268,25 +1294,22 @@
                 if (childUpcs.has(item.upc)) return;
 
                 const isParent = childrenByParent[item.upc] && childrenByParent[item.upc].length > 0;
-                // For parent items (those with children), show combined variance
-                // For regular items, show normal variance
+                const hasChildCounts = isParent ? (childrenByParent[item.upc] || []).some(child => counts[child.upc] != null && counts[child.upc] !== '') : false;
+                const hasParentCount = counts[item.upc] != null && counts[item.upc] !== '';
+                const isUncounted = !hasParentCount && !hasChildCounts;
                 const variance = isParent ? getParentCombinedVariance(item.upc) : getItemVariance(item.upc);
                 const countStr = counts[item.upc] != null ? counts[item.upc] : '';
-                // hasVar: ignore anything within ±0.05 — fractional noise from SellingQty
-                // rounding (e.g. 0.33 vs 0.34) should not trigger a highlight
                 const hasVar = Math.abs(variance) >= 0.05;
-                // Display: 2dp, but when fractional part >= 0.95, round up to whole
-                // e.g. 0.66→"0.66", 0.99→"1", 1.34→"1.34", 2.97→"3"
                 const displayVal = (Math.abs(variance) % 1 >= 0.95) ? Math.round(variance) : parseFloat(variance.toFixed(2));
                 const signedVar = displayVal > 0 ? `+${displayVal}` : displayVal.toString();
                 const varClass = displayVal > 0 ? 'positive' : displayVal < 0 ? 'negative' : 'zero';
                 const highlightClass = (countStr !== '' && hasVar) ? ' highlight' : '';
 
-                // Determine if row should be hidden by filters
                 const hideVariance = showVarianceOnly && !hasVar;
                 const hideTicket = showTicketedOnly && !tickets.has(item.upc);
+                const hideUncounted = showUncountedOnly && !isUncounted;
                 const hideLookup = lookupFilter !== '' && !item.description.toLowerCase().includes(lookupFilter);
-                if (hideVariance || hideTicket || hideLookup) return;
+                if (hideVariance || hideTicket || hideUncounted || hideLookup) return;
 
                 visibleIdx++;
 
@@ -1714,6 +1737,24 @@
         document.getElementById('show-ticketed-only').addEventListener('change', function() {
             showTicketedOnly = this.checked;
             document.getElementById('ticket-filter-toggle').classList.toggle('active', this.checked);
+            renderTable();
+        });
+
+        // ─────────────────────────────────────
+        //  Show-Uncounted-Only Filter Toggle
+        // ─────────────────────────────────────
+        function toggleUncountedFilter() {
+            showUncountedOnly = !showUncountedOnly;
+            const cb = document.getElementById('show-uncounted-only');
+            const toggle = document.getElementById('uncounted-toggle');
+            cb.checked = showUncountedOnly;
+            toggle.classList.toggle('active', showUncountedOnly);
+            renderTable();
+        }
+
+        document.getElementById('show-uncounted-only').addEventListener('change', function() {
+            showUncountedOnly = this.checked;
+            document.getElementById('uncounted-toggle').classList.toggle('active', this.checked);
             renderTable();
         });
 
