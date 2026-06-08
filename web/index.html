@@ -164,13 +164,29 @@
         .toolbar {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
             margin-bottom: 16px;
+            position: relative;
+        }
+
+        .toolbar-row-actions {
+            justify-content: flex-end;
+            row-gap: 8px;
+            column-gap: 10px;
+        }
+
+        .toolbar-row-actions .btn,
+        .toolbar-row-actions .file-input-wrapper {
+            margin-left: 8px;
+        }
+
+        .toolbar-row-actions .zero-toggle {
+            margin-left: auto;
         }
 
         .toolbar-row {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             align-items: center;
             flex-wrap: wrap;
         }
@@ -913,7 +929,19 @@
 
         <!-- Toolbar -->
         <div class="toolbar">
-            <!-- Row 1: Toggles + Refresh + Print -->
+            <!-- Row 1: Import / Export / No Count as Zero -->
+            <div class="toolbar-row toolbar-row-actions">
+                <div class="file-input-wrapper">
+                    <button class="btn btn-load">Import Count</button>
+                    <input type="file" id="load-file-input" accept=".txt,.csv">
+                </div>
+                <button class="btn btn-save toolbar-btn-export" onclick="saveResults()">Export</button>
+                <div class="toggle-checkbox zero-toggle" id="zero-toggle" onclick="toggleZeroCount()">
+                    <input type="checkbox" id="treat-no-count-zero" checked>
+                    <label for="treat-no-count-zero">No Count as Zero</label>
+                </div>
+            </div>
+            <!-- Row 2: Toggles + Refresh + Print -->
             <div class="toolbar-row">
                 <div class="toggle-checkbox" id="variance-toggle" onclick="toggleVarianceFilter()">
                     <input type="checkbox" id="show-variance-only">
@@ -930,22 +958,10 @@
                 <button class="btn btn-refresh" onclick="refreshAllItems()">Refresh All</button>
                 <button class="btn btn-print" onclick="printCountSheet()">Print Count Sheet</button>
             </div>
-            <!-- Row 2: Filter -->
+            <!-- Row 3: Filter -->
             <div class="toolbar-row">
                 <input type="text" id="lookup-input" placeholder="Filter by description..." oninput="onLookupChange()" class="toolbar-filter">
                 <button class="btn-clear-lookup" onclick="clearLookup()" title="Clear filter">✕</button>
-                <div class="toggle-checkbox zero-toggle" id="zero-toggle" onclick="toggleZeroCount()">
-                    <input type="checkbox" id="treat-no-count-zero" checked>
-                    <label for="treat-no-count-zero">No Count as Zero</label>
-                </div>
-            </div>
-            <!-- Row 3: Import + Export -->
-            <div class="toolbar-row">
-                <div class="file-input-wrapper">
-                    <button class="btn btn-load">Import Count</button>
-                    <input type="file" id="load-file-input" accept=".txt,.csv">
-                </div>
-                <button class="btn btn-save toolbar-btn-export" onclick="saveResults()">Export</button>
             </div>
             <!-- Row 4: Tracking Boxes -->
             <div class="toolbar-row toolbar-stats">
