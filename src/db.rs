@@ -1,9 +1,13 @@
+// Database layer: connection pool, SQL queries, row coercion helpers,
+// parent/child expansion, and stock-take save/ticket file generation.
 use deadpool_tiberius::Manager;
 use futures_util::StreamExt;
 use tiberius::{EncryptionLevel, QueryItem};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
+/// A search-result row. `parent_upc` is empty for standalone items,
+/// non-empty for child items (points to the parent's UPC).
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct StockItem {
     pub upc: String,
@@ -54,6 +58,8 @@ pub struct SearchQuery {
     pub supplier: Option<String>,
     pub sub_department: Option<String>,
 }
+/// A counted row. `has_ticket` toggles label printing; `ticket_qty` controls
+/// copies (1–999). `count` is the counted quantity; `variance` is derived.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SaveRow {
     pub upc: String,
@@ -136,6 +142,7 @@ fn cell_to_string(row: &tiberius::Row, idx: usize) -> String {
 }
 
 /// Coerce a single column cell to an f64 regardless of SQL numeric type.
+/// Returns 0.0 for NULL / unparseable values.
 fn cell_to_f64(row: &tiberius::Row, idx: usize) -> f64 {
     if let Ok(Some(v)) = row.try_get::<f64, _>(idx) {
         return v;
@@ -167,7 +174,10 @@ fn cell_to_f64(row: &tiberius::Row, idx: usize) -> f64 {
 
 /// Parse our custom config format:
 ///   server=HOST,port;database=DB;uid=USER;pwd=PASS;encrypt=false
-/// Falls back to ADO.NET style if "Driver=" is detected.
+/// Falls back to ADO.NET style if "Driver=" or "server={" is detected.
+///
+/// Supported custom keys: server/host, port, database/db, uid/user,
+/// pwd/password, encrypt, trust_cert.
 pub fn build_manager(conn_string: &str) -> Result<Manager, DbError> {
     let lower = conn_string.to_lowercase();
     
@@ -465,7 +475,10 @@ impl DbPool {
         Ok(results)
     }
 
-    pub async fn search_items(&self, department: &str, supplier: &str, sub_department: &str) -> Result<Vec<StockItem>, DbError> {
+    /// Search items by department / supplier / sub-department (ALL = no filter).
+/// Post-query expansion ensures complete parent/child groups: if a child matches,
+/// its parent is included; if a parent matches, all its children are included.
+pub async fn search_items(&self, department: &str, supplier: &str, sub_department: &str) -> Result<Vec<StockItem>, DbError> {
         let mut conn = self.pool.get().await.map_err(|e| DbError::Connection(e.to_string()))?;
         let dept_clause = if department != "ALL" && !department.is_empty() {
             format!(" AND i.Department = '{}'", department.replace('\'', "''"))
@@ -531,6 +544,7 @@ impl DbPool {
         // ── Expand results so parent/child relationships stay complete ──
         // If a returned row is a child (ParentUPC set), fetch its parent.
         // If a returned row is a parent (ParentUPC empty), fetch all its children.
+        // Collect missing parents/children, dedupe by UPC
         let mut parent_upcs_needed: Vec<String> = Vec::new();
         let mut child_upcs_needed: Vec<String> = Vec::new();
         for item in &items {
@@ -628,6 +642,7 @@ impl DbPool {
                 }
             }
         }
+        // Expansion complete — every parent has all children, every child has its parent
         Ok(items)
     }
 }
@@ -684,7 +699,8 @@ pub fn save_stocktake(output_dir: &str, rows: &[SaveRow]) -> Result<(std::path::
         txt_written = false;
     }
 
-    // Generate .qry ticket file if any items have tickets
+    // Generate .qry ticket file if any items have tickets.
+    // If an existing .qry is found in tickets/, merge its Criteria blocks into the new file.
     let ticket_rows: Vec<&SaveRow> = rows.iter().filter(|r| r.has_ticket).collect();
     if !ticket_rows.is_empty() {
         let tickets_dir = std::path::Path::new(output_dir).join("tickets");

@@ -47,10 +47,10 @@ fn anchor_cwd_to_exe() {
 async fn run() -> std::io::Result<()> {
     anchor_cwd_to_exe();
 
-    // Load configuration (config.toml, then legacy stocktake.toml, then defaults).
-    // A file that exists but fails to parse is now a hard error with the real
-    // reason (line/column + the backslash-escape hint), instead of being
-    // silently swallowed and misreported as "no config file found".
+    // 1) Load config (config.toml -> stocktake.toml -> defaults).
+    // 2) Reject empty connection strings with a clear message.
+    // 3) Build the DB pool (lazy; no dial yet).
+    // 4) Bind and start the HTTP server.
     let cfg = config::load()?;
 
     if cfg.connection_string.is_empty() {

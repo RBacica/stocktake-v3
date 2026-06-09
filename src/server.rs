@@ -6,9 +6,10 @@ use crate::db;
 #[derive(Clone)]
 pub struct OutputDir(pub String);
 
-/// Configure all API routes. Called from main.rs with the pool + output dir
-/// already registered as app data. Static file serving is wired separately
-/// in main.rs via `actix_files::Files`.
+/// Endpoints: /api/departments, /api/suppliers, /api/suppliers-for-dept,
+/// /api/search, /api/save, /api/refresh-upc, /api/barcode-lookup,
+/// /api/sub-departments. Static files served from `web/` with `index.html`
+/// as the default file; API routes are registered first so they take precedence.
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(web::resource("/api/departments").route(web::get().to(get_departments)))
         .service(web::resource("/api/suppliers").route(web::get().to(get_suppliers)))
@@ -24,19 +25,24 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
 //  API Handlers
 // ─────────────────────────────────────────────
 
+// GET /api/departments
+// 200 deps | 500 DB down
 async fn get_departments(pool: web::Data<db::DbPool>) -> HttpResponse {
     // Always returns a populated list: live DB if reachable, otherwise the
     // fixed Infinity department list. The UI dropdown is never empty.
     HttpResponse::Ok().json(pool.departments_or_fallback().await)
 }
 
+// GET /api/suppliers
+// 200 list | 500 DB down
 async fn get_suppliers(pool: web::Data<db::DbPool>) -> HttpResponse {
     // Always returns a populated list: live DB if reachable, otherwise the
     // four known suppliers (code + name).
     HttpResponse::Ok().json(pool.suppliers_or_fallback().await)
 }
 
-/// GET /api/suppliers-for-dept?department=<id>
+// GET /api/suppliers-for-dept?department=<id>
+// 200 list | 500 DB | 400 missing/invalid
 /// Returns only suppliers that have items in the given department.
 /// If department=ALL, returns all suppliers.
 async fn get_suppliers_for_dept(
@@ -55,6 +61,8 @@ async fn get_suppliers_for_dept(
     }
 }
 
+// GET /api/search?department=&supplier=&sub_department=
+// 200 items | 500 DB
 async fn search_items(
     pool: web::Data<db::DbPool>,
     query: web::Query<db::SearchQuery>,
@@ -74,7 +82,8 @@ async fn search_items(
     }
 }
 
-/// GET /api/sub-departments?department=<id>
+// GET /api/sub-departments?department=<id>
+// 200 list | 500 DB
 /// Returns sub-departments for the given department.
 async fn get_sub_departments(
     pool: web::Data<db::DbPool>,
@@ -92,6 +101,8 @@ async fn get_sub_departments(
     }
 }
 
+// GET /api/refresh-upc?upc=<upc>
+// 200 {upc, stock_on_hand} | 400 missing | 500 DB
 /// Refresh StockOnHand for a single UPC.
 /// Query param: `upc`
 /// Returns JSON: { "upc": "...", "stock_on_hand": <i64> }
@@ -120,6 +131,8 @@ async fn refresh_upc(
     }
 }
 
+// GET /api/barcode-lookup?barcode=<barcode>
+// 200 {upcs} | 400 missing | 500 DB
 /// Barcode lookup: return all UPCs for a scanned barcode from ItemBarcodes.
 /// Query param: `barcode`
 /// Returns JSON: { "upcs": ["...", "..."] }
@@ -147,8 +160,9 @@ async fn barcode_lookup(
     }
 }
 
-/// Feature #8: save the counted rows server-side as a timestamped CSV/txt file.
-/// The browser clears its view on a 200 response.
+// POST /api/save — 200 ok | 400 empty | 500 write fail
+/// Persist counted rows to a timestamped .txt file; generate a .qry ticket
+/// file when any row has has_ticket=true. The browser clears its view on 200.
 async fn save_counts(
     output_dir: web::Data<OutputDir>,
     body: web::Json<db::SaveRequest>,

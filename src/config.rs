@@ -40,6 +40,9 @@ pub struct AppConfig {
 /// `stocktake.toml` (legacy flat format). Returns a default config if neither
 /// file exists.
 ///
+/// Returns `AppConfig` or a hard parse error for malformed existing files.
+/// Missing files fall back to defaults (empty connection string -> rejected by main()).
+///
 /// IMPORTANT: a file that EXISTS but fails to parse is a hard error — we return
 /// it to the caller instead of silently falling through to defaults. Previously
 /// a malformed `config.toml` (e.g. an unescaped backslash in a Windows path or
