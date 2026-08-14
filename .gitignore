@@ -1,2 +1,6 @@
 /target
 stocktake.toml
+
+# Build output (exe)
+/bin/
+*.exe
